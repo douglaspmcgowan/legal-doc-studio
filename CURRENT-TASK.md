@@ -1,25 +1,26 @@
 # CURRENT-TASK: Legal Doc Studio ("Recital")
 
-## 🔵 ACTIVE (Jun 16 overnight — autonomous build via /goal)
+## ✅ DONE (Jun 16 overnight) — interactive legal-document studio, deployed
 
-**Goal:** Interactive legal-document viewer/editor as a DEMO for Anna Maxwell (AMAX Elite Seals / legal-solutions-website customer). View the Motion to Dismiss draft, edit it, fill highlighted placeholder fields via a form (text/dropdown/date) that propagates live throughout the document, browse embedded reference research docs, and see citation→section→derivation mappings (click a section → highlight its supporting authorities + reference excerpts + a derivation note). Professional minimal aesthetic, brand-cohesive with Anna's site (Sellit Cobalt). No AI-isms. Tested. Deployed to Vercel via GitHub.
+**Goal (met):** Interactive viewer/editor for the Motion to Dismiss (E.D. Pa., FRCP 12(b)(6), SOL grounds) as a demo for Anna Maxwell / legal-solutions-website. Fillable highlighted fields with live propagation, embedded research memos, citation→section→derivation mapping, edit mode, court-clean print. Brand-cohesive (Sellit Cobalt), no AI-isms, tested, deployed.
 
-**Decisions locked:**
+**Live:** https://legal-doc-studio.vercel.app (200, PUBLIC — clean project domain)
+**Repo:** https://github.com/douglaspmcgowan/legal-doc-studio (master) — connected to Vercel for auto-deploy on push.
+**Vercel:** team scope `douglas-mcgowans-projects`, static (no build). NOTE: hashed `*-douglas-mcgowans-projects.vercel.app` deployment URLs return 401 (team SSO Standard Protection); the clean `legal-doc-studio.vercel.app` domain is exempt and public — **share that one.**
 
-- Static SPA (no build step) — index.html + styles.css + app.js + data.js + reference/\*.md. Most reliable for autonomous build + Vercel static deploy.
-- Brand: Sellit Cobalt (cobalt #3F69FF / cobalt-deep #2E49A8, ink #0A263A/#143248, cream #FBF6EB, mint #B5FFA9 sparingly), Inter Tight. Product-UI register (not marketing).
-- Source content: the Motion to Dismiss + 4 research files already drafted in `OneDrive\Documents\General Claude\motion-to-dismiss\`.
-- Repo: douglaspmcgowan/legal-doc-studio. Vercel static. gh+vercel authed as douglaspmcgowan.
+**Built (static SPA, no build step):** `index.html` · `styles.css` (Sellit Cobalt, product register, print CSS) · `app.js` (render engine, live field propagation, citation map, edit mode, markdown reference reader) · `data.js` (document sections w/ {{field}}+[[cite]] markers, 18 fields, 21 authorities, per-section derivations) · `refs-data.js` (4 research memos embedded, regen via `node build-refs.mjs`) · `reference/*.md`.
 
-**Plan / steps:**
+**Verified in-browser (local, identical commit):** 0 console errors · 30 sections, 63 field tokens, 28 cite chips, 18 fields · live propagation (sample data → 18/18, 0 blanks, caption+conclusion+signature all update) · computed SOL math (incident+2yr → deadline; days-late; recomputes on date change) · section→authorities+derivation mapping · citation locate (flash + scroll + tab switch) · reference reader (markdown w/ tables/lists, no raw markers) · fill/read/edit modes · combobox district field · 3-pane desktop (320/760/360) + mobile collapse. Brand: Inter Tight UI + serif document, no mono in chrome, amber fill tokens, cobalt(case)/green(statute) cites. Production verified via curl: HTML + all assets 200.
+**Screenshot tool:** timed out ×3 (known headless-capture quirk this env) → verified via DOM eval/inspect/snapshot instead.
 
-1. [ ] data.js — structured doc (sections w/ {{FIELD}} + [[cite:id]] markers), FIELDS, CITATIONS, REFERENCES (4 md), per-section derivation notes
-2. [ ] index.html — 3-pane shell (fill-in form + document + context panel), toolbar (modes, progress, export)
-3. [ ] styles.css — Sellit Cobalt tokens, product register, full interaction states, reduced-motion
-4. [ ] app.js — render engine ({{field}}→highlighted input, [[cite]]→chip), live field propagation, click-section→highlight authorities, citation map, edit mode, export/print
-5. [ ] Local test: python http.server + Playwright (desktop+mobile), 0 console errors, field propagation + mapping verified, AI-isms self-check
-6. [ ] Git → GitHub (douglaspmcgowan/legal-doc-studio) → Vercel deploy → verify live URL 200
-7. [ ] Update repo-map; final report
+## 🔵 ACTIVE (Jun 16 — design-simplicity pass + review)
 
-**Next command:** build data.js
-**Artifacts dir:** `C:\Users\dougl\projects\legal-doc-studio\`
+**Goal:** Research what makes UIs simple/better (memory-first), apply a clean/professional/usable pass to Recital, re-test, redeploy, then write a design review.
+**Plan:** (1) synthesize simplicity principles from memory [ai-isms, motion-defaults, design-tooling] + light web cross-check → checklist; (2) audit Recital; (3) calmer document surface (subtler citation chips + field tokens at rest, reveal on engagement), reduce border noise, tighten header/panels, typographic rhythm; (4) browser re-test 0 errors; (5) redeploy; (6) design-review writeup.
+**Key constraint:** keep the fill-in highlight as a FEATURE (Doug's ask) but refine it from "highlighter" to professional.
+
+**Follow-ups (minor, non-blocking):**
+
+- [ ] Update repo-map.md with the new repo — BLOCKED: G:\ drive offline this session. Do when G: remounts.
+- [ ] Optional: attach a custom domain (e.g. under amaxeliteseals) if Doug wants the demo on-brand-domain.
+- [ ] Optional: more demo documents (the data model + reference pipeline already support adding others).
