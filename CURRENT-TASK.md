@@ -13,11 +13,14 @@
 **Verified in-browser (local, identical commit):** 0 console errors · 30 sections, 63 field tokens, 28 cite chips, 18 fields · live propagation (sample data → 18/18, 0 blanks, caption+conclusion+signature all update) · computed SOL math (incident+2yr → deadline; days-late; recomputes on date change) · section→authorities+derivation mapping · citation locate (flash + scroll + tab switch) · reference reader (markdown w/ tables/lists, no raw markers) · fill/read/edit modes · combobox district field · 3-pane desktop (320/760/360) + mobile collapse. Brand: Inter Tight UI + serif document, no mono in chrome, amber fill tokens, cobalt(case)/green(statute) cites. Production verified via curl: HTML + all assets 200.
 **Screenshot tool:** timed out ×3 (known headless-capture quirk this env) → verified via DOM eval/inspect/snapshot instead.
 
-## 🔵 ACTIVE (Jun 16 — design-simplicity pass + review)
+## ✅ DONE (Jun 16 — design-simplicity pass + review)
 
-**Goal:** Research what makes UIs simple/better (memory-first), apply a clean/professional/usable pass to Recital, re-test, redeploy, then write a design review.
-**Plan:** (1) synthesize simplicity principles from memory [ai-isms, motion-defaults, design-tooling] + light web cross-check → checklist; (2) audit Recital; (3) calmer document surface (subtler citation chips + field tokens at rest, reveal on engagement), reduce border noise, tighten header/panels, typographic rhythm; (4) browser re-test 0 errors; (5) redeploy; (6) design-review writeup.
-**Key constraint:** keep the fill-in highlight as a FEATURE (Doug's ask) but refine it from "highlighter" to professional.
+**Goal (met):** Researched UI-simplicity principles (memory-first + web cross-check), applied a calmer/cleaner pass, re-tested, redeployed, wrote `DESIGN-REVIEW.md`.
+**Principles applied:** grayscale-first/color-last · hierarchy via weight+space · progressive disclosure · generous whitespace.
+**Changes (commit 91d4551):** citations now quiet slate footnote-refs at rest (cobalt/green reveal on hover+locate) · filled field values seamless in prose · empty blanks softened from solid amber blocks → light amber underline (weight 500) · selected paragraph lights its own citations · 3-layer soft document shadow · calmer filled form inputs · more card breathing room.
+**Verified:** 0 console errors; counts intact (30/63/28); propagation + citation/section mapping + locate-flash + reference reader + all modes still work; empty-field contrast 5.9:1 (AA). Live CSS confirmed deployed (~15s after push) at https://legal-doc-studio.vercel.app. Screenshot tool timed out (known quirk) → verified via computed-style inspection.
+**Note:** the "flash transparent" reads during testing were a transition-timing artifact (read at t=0 of 140ms transition), not a bug — confirmed cobalt+white with transition disabled.
+**Kept deliberately:** fill-in highlight as a feature (refined, not removed); serif document; two functional citation colors.
 
 **Follow-ups (minor, non-blocking):**
 
