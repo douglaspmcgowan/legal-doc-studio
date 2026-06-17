@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Recital — Legal Document Studio</title>
+    <meta
+      name="description"
+      content="Interactive legal-document studio: fill, edit, and trace every citation in a Motion to Dismiss."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%233f69ff'/%3E%3Cpath d='M9 8h9a5 5 0 0 1 0 10h-4l6 6h-4l-6-6v6H9z' fill='%23fff'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <!-- header -->
+      <header class="topbar">
+        <div class="brand">
+          <svg class="brand__mark" viewBox="0 0 32 32" aria-hidden="true">
+            <rect width="32" height="32" rx="7" fill="var(--cobalt)" />
+            <path d="M9 8h9a5 5 0 0 1 0 10h-4l6 6h-4l-6-6v6H9z" fill="#fff" />
+          </svg>
+          <span class="brand__name">Recital</span>
+          <span class="brand__doc">
+            <b id="docTitle">Motion to Dismiss</b>
+            <span id="docSub">E.D. Pa. · FRCP 12(b)(6)</span>
+          </span>
+        </div>
+
+        <div class="topbar__spacer"></div>
+
+        <div class="progress" title="Fields completed">
+          <div class="progress__track">
+            <div class="progress__fill" id="progFill"></div>
+          </div>
+          <span class="progress__txt" id="progTxt">0 / 0 fields</span>
+        </div>
+
+        <div class="segmented" role="group" aria-label="View mode">
+          <button data-mode="fill" aria-pressed="true">Fill</button>
+          <button data-mode="read" aria-pressed="false">Read</button>
+          <button data-mode="edit" aria-pressed="false">Edit</button>
+        </div>
+
+        <button class="btn" id="btnPrint" title="Print or save as PDF">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+          >
+            <path
+              d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M6 14h12v7H6z"
+            />
+          </svg>
+          Print / PDF
+        </button>
+      </header>
+
+      <!-- body -->
+      <div class="workbench">
+        <!-- left: fill-in form -->
+        <aside class="rail" aria-label="Document fields">
+          <div class="rail__head">
+            <h2 class="rail__title">Fill in the document</h2>
+            <p class="rail__sub">
+              Highlighted blanks update everywhere they appear.
+            </p>
+            <div class="rail__actions">
+              <button class="btn" id="btnSample">Use sample data</button>
+              <button class="btn" id="btnClear">Clear</button>
+            </div>
+          </div>
+          <div class="form" id="form"></div>
+        </aside>
+
+        <!-- center: the document -->
+        <main class="stage" id="stage" aria-label="Document">
+          <div class="mobilenote">
+            Recital is built for a wider screen — the fill-in form and citation
+            map are hidden here. The document below is fully readable.
+          </div>
+          <article class="paper" id="paper"></article>
+        </main>
+
+        <!-- right: context / authorities / sources -->
+        <aside class="ctx" aria-label="Citations and sources">
+          <div class="ctx__tabs" role="tablist">
+            <button
+              class="ctx__tab"
+              role="tab"
+              aria-selected="true"
+              data-tab="context"
+            >
+              Context
+            </button>
+            <button
+              class="ctx__tab"
+              role="tab"
+              aria-selected="false"
+              data-tab="authorities"
+            >
+              Authorities
+            </button>
+            <button
+              class="ctx__tab"
+              role="tab"
+              aria-selected="false"
+              data-tab="sources"
+            >
+              Sources
+            </button>
+          </div>
+          <div class="ctx__body" id="ctxBody"></div>
+        </aside>
+      </div>
+    </div>
+
+    <!-- reference reader drawer -->
+    <div class="scrim" id="scrim"></div>
+    <div
+      class="drawer"
+      id="drawer"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Reference document"
+    >
+      <div class="drawer__head">
+        <h3 id="drawerTitle">Reference</h3>
+        <button class="iconbtn" id="drawerClose" aria-label="Close">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M6 6l12 12M18 6L6 18" />
+          </svg>
+        </button>
+      </div>
+      <div class="drawer__body"><div class="md" id="drawerBody"></div></div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="refs-data.js"></script>
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
