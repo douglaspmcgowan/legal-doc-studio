@@ -1,0 +1,7 @@
+version: 2
+project: "legal-doc-studio"
+data_root_env: "PROJECT_DATA_ROOT"
+assets: []
+
+# All required document content and reference sources are committed. Browser
+# local storage is user-local runtime state and is not approved for harness transport.

@@ -1,3 +1,8 @@
+# Archived legacy task state
+
+Source: `CURRENT-TASK.md` at base commit `8a00cc90dfcb8b34419bee9916c71ed535e9567e`.
+Archived during harness v3 onboarding on 2026-07-30 after a repository-wide owner search found no consumers.
+
 # CURRENT-TASK: Legal Doc Studio ("Recital")
 
 ## ✅ DONE (Jun 16 overnight) — interactive legal-document studio, deployed
