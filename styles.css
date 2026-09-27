@@ -7,7 +7,6 @@
   --cobalt: #3f69ff;
   --cobalt-deep: #2e49a8;
   --cobalt-wash: #eef2ff;
-  --mint: #b5ffa9;
   --ink: #0a263a;
   --ink-2: #143248;
   --cream: #fbf6eb;
@@ -17,17 +16,50 @@
   --line: #e7e0d2;
   --line-2: #d8d0bd;
   --muted: #5d6b73;
-  --muted-2: #7c8890;
+  /* Darkened from #7c8890 on 2026-09-27: 3.63:1 on --paper failed WCAG AA for
+     the 11px uppercase group labels. #687176 is 4.99:1 on --paper and 4.63:1
+     on --cream, the smallest change that clears AA on both surfaces. */
+  --muted-2: #687176;
+
+  /* Surfaces */
+  --input-bg: #fcfaf5;
+  --surface-hover: #faf7ef;
+  --surface-edit: #fcfbf7;
+  --stage-glow: #fff8ec;
+  --stage-glow-fade: rgba(255, 248, 236, 0);
+  --paper-ink: #1a2530;
+  --md-ink: #1b2730;
+  --caption-rule: #15202b;
+  --on-accent: #ffffff;
+  --scrim-bg: rgba(10, 38, 58, 0.42);
 
   /* Functional status — empty field "needs attention" (not decorative gold) */
-  --todo-ink: #9a6a12;
   --todo-bg: #fbeccb;
   --todo-line: #e6c474;
+  --tok-empty-ink: #8a5d11;
+  --tok-empty-bg: rgba(228, 170, 66, 0.1);
+  --tok-empty-bg-hover: rgba(228, 170, 66, 0.2);
 
+  /* Citations */
   --filled-underline: #b8c6f6;
-  --hl: #fff3cd; /* transient highlight when locating a citation */
+  --cite-ink: #46586a;
+  --cite-line: #c6d2dd;
+  --computed-underline: rgba(63, 105, 255, 0.28);
+
+  /* Authority weight (statute/rule green, persuasive neutral) */
+  --statute: #1d6b4a;
+  --statute-wash: #e4f4ec;
+  --persuasive-wash: #f1ece0;
+
+  /* Selection and search */
   --sel: #e9eeff; /* selected section tint */
-  --danger: #b4321f;
+  --srchit: #fbf3d6; /* transient highlight when locating a citation */
+
+  /* Focus and flash rings */
+  --focus-ring: 0 0 0 3px rgba(63, 105, 255, 0.16);
+  --focus-ring-strong: 0 0 0 3px rgba(63, 105, 255, 0.28);
+  --flash-ring: 0 0 0 3px rgba(63, 105, 255, 0.22);
+  --cite-flash-ring: 0 0 0 3px rgba(63, 105, 255, 0.25);
 
   /* Type */
   --sans:
@@ -35,16 +67,51 @@
   --serif:
     "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia,
     "Times New Roman", serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* Type scale — every size in the product, named at its shipped value */
+  --fs-3xs: 10px;
+  --fs-2xs: 11px;
+  --fs-xs: 11.5px;
+  --fs-sm: 12px;
+  --fs-sm-plus: 12.5px;
+  --fs-base: 13px;
+  --fs-base-plus: 13.5px;
+  --fs-md: 14.5px;
+  --fs-body: 15px;
+  --fs-body-plus: 15.5px;
+  --fs-lg: 16px;
+  --fs-xl: 17px;
+  --fs-2xl: 18px;
+  --fs-3xl: 21px;
+  --fs-cite: 0.84em; /* citation chip, relative to the serif prose around it */
+  --fs-tok: 0.9em; /* empty field token, relative to the serif prose */
+  --fs-inherit: 1em; /* a filled token rejoins the prose at its own size */
+  --fs-print: 12pt;
 
   /* Shape */
+  --r-xs: 3px;
+  --r-sm: 4px;
+  --r-sm-plus: 5px;
+  --r-md: 6px;
+  --r-md-plus: 7px;
   --r-input: 8px;
+  --r-doc: 8px;
+  --r-lg: 10px;
   --r-card: 12px;
-  --r-panel: 14px;
+  --r-pill: 99px;
+  --r-quote: 0 8px 8px 0;
 
   /* Elevation (tinted to brand, never pure black) */
   --sh-1: 0 1px 2px rgba(10, 38, 58, 0.06), 0 1px 1px rgba(10, 38, 58, 0.04);
-  --sh-2: 0 6px 20px rgba(10, 38, 58, 0.1);
   --sh-pop: 0 12px 40px rgba(10, 38, 58, 0.18);
+  --sh-paper:
+    0 1px 1px rgba(10, 38, 58, 0.04), 0 4px 10px rgba(10, 38, 58, 0.05),
+    0 16px 40px rgba(10, 38, 58, 0.07);
+
+  /* Print (never redefined by a colour scheme — paper is paper) */
+  --print-paper: #ffffff;
+  --print-ink: #000000;
 
   /* Z scale (semantic, never 9999) */
   --z-sticky: 10;
@@ -70,7 +137,7 @@ body {
   font-family: var(--sans);
   color: var(--ink);
   background: var(--cream);
-  font-size: 15px;
+  font-size: var(--fs-body);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -82,7 +149,7 @@ button {
 
 ::selection {
   background: var(--cobalt);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 /* ----------------------------------------------------------------- layout */
@@ -125,7 +192,7 @@ button {
 }
 .brand__name {
   font-weight: 700;
-  font-size: 18px;
+  font-size: var(--fs-2xl);
   letter-spacing: -0.02em;
 }
 .brand__doc {
@@ -138,10 +205,10 @@ button {
 }
 .brand__doc b {
   font-weight: 600;
-  font-size: 13.5px;
+  font-size: var(--fs-base-plus);
 }
 .brand__doc span {
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
   color: var(--muted);
 }
 
@@ -154,7 +221,7 @@ button {
   display: inline-flex;
   background: var(--cream);
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--r-lg);
   padding: 3px;
   gap: 2px;
 }
@@ -163,10 +230,10 @@ button {
   border: 0;
   background: transparent;
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--fs-base);
   font-weight: 500;
   padding: 6px 14px;
-  border-radius: 7px;
+  border-radius: var(--r-md-plus);
   cursor: pointer;
   transition:
     color 0.15s,
@@ -192,18 +259,20 @@ button {
   width: 96px;
   height: 6px;
   background: var(--line);
-  border-radius: 99px;
+  border-radius: var(--r-pill);
   overflow: hidden;
 }
 .progress__fill {
   height: 100%;
-  width: 0;
+  width: 100%;
   background: var(--cobalt);
-  border-radius: 99px;
-  transition: width 0.35s var(--ease-out);
+  border-radius: var(--r-pill);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.35s var(--ease-out);
 }
 .progress__txt {
-  font-size: 12.5px;
+  font-size: var(--fs-sm-plus);
   color: var(--muted);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -217,7 +286,7 @@ button {
   border: 1px solid var(--line-2);
   background: var(--paper);
   color: var(--ink);
-  font-size: 13px;
+  font-size: var(--fs-base);
   font-weight: 500;
   padding: 7px 13px;
   border-radius: var(--r-input);
@@ -237,7 +306,7 @@ button {
 .btn--primary {
   background: var(--cobalt);
   border-color: var(--cobalt);
-  color: #fff;
+  color: var(--on-accent);
 }
 .btn--primary:hover {
   background: var(--cobalt-deep);
@@ -265,7 +334,7 @@ button {
   border: 0;
   background: transparent;
   color: var(--muted);
-  border-radius: 7px;
+  border-radius: var(--r-md-plus);
   cursor: pointer;
   transition:
     background 0.15s,
@@ -298,13 +367,13 @@ button {
   border-bottom: 1px solid var(--line);
 }
 .rail__title {
-  font-size: 13px;
+  font-size: var(--fs-base);
   font-weight: 600;
   letter-spacing: 0.01em;
   margin: 0 0 3px;
 }
 .rail__sub {
-  font-size: 12px;
+  font-size: var(--fs-sm);
   color: var(--muted);
   margin: 0;
 }
@@ -317,7 +386,7 @@ button {
   flex: 1;
   justify-content: center;
   padding: 6px 8px;
-  font-size: 12.5px;
+  font-size: var(--fs-sm-plus);
 }
 
 .form {
@@ -333,7 +402,7 @@ button {
   top: 0;
   background: var(--paper);
   padding: 12px 18px 7px;
-  font-size: 11px;
+  font-size: var(--fs-2xs);
   font-weight: 600;
   letter-spacing: 0.07em;
   text-transform: uppercase;
@@ -360,7 +429,7 @@ button {
   scroll-margin-top: 46px;
 }
 .field > label {
-  font-size: 12.5px;
+  font-size: var(--fs-sm-plus);
   font-weight: 550;
   color: var(--ink-2);
   display: flex;
@@ -370,7 +439,7 @@ button {
 .field__dot {
   width: 6px;
   height: 6px;
-  border-radius: 99px;
+  border-radius: var(--r-pill);
   background: var(--todo-line);
   flex: none;
 }
@@ -380,12 +449,12 @@ button {
 .field input,
 .field select {
   font-family: inherit;
-  font-size: 13.5px;
+  font-size: var(--fs-base-plus);
   color: var(--ink);
   padding: 8px 11px;
   border: 1px solid var(--line);
   border-radius: var(--r-input);
-  background: #fcfaf5;
+  background: var(--input-bg);
   width: 100%;
   transition:
     border-color 0.15s,
@@ -405,10 +474,10 @@ button {
   outline: none;
   background: var(--paper);
   border-color: var(--cobalt);
-  box-shadow: 0 0 0 3px rgba(63, 105, 255, 0.16);
+  box-shadow: var(--focus-ring);
 }
 .field__hint {
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
   color: var(--muted);
   line-height: 1.4;
 }
@@ -420,7 +489,7 @@ button {
 }
 .field.is-flash input,
 .field.is-flash select {
-  box-shadow: 0 0 0 3px rgba(63, 105, 255, 0.28);
+  box-shadow: var(--focus-ring-strong);
   border-color: var(--cobalt);
 }
 
@@ -432,8 +501,8 @@ button {
   background:
     radial-gradient(
       1200px 380px at 50% -120px,
-      #fff8ec 0%,
-      rgba(255, 248, 236, 0) 70%
+      var(--stage-glow) 0%,
+      var(--stage-glow-fade) 70%
     ),
     var(--cream);
 }
@@ -442,15 +511,12 @@ button {
   margin: 0 auto;
   background: var(--paper);
   border: 1px solid var(--line);
-  border-radius: 8px;
-  box-shadow:
-    0 1px 1px rgba(10, 38, 58, 0.04),
-    0 4px 10px rgba(10, 38, 58, 0.05),
-    0 16px 40px rgba(10, 38, 58, 0.07);
+  border-radius: var(--r-doc);
+  box-shadow: var(--sh-paper);
   padding: 68px clamp(36px, 6vw, 80px);
   font-family: var(--serif);
-  color: #1a2530;
-  font-size: 16px;
+  color: var(--paper-ink);
+  font-size: var(--fs-lg);
   line-height: 1.75;
 }
 .doc-part {
@@ -466,7 +532,7 @@ button {
   margin: 40px 0 26px;
   color: var(--muted);
   font-family: var(--sans);
-  font-size: 11px;
+  font-size: var(--fs-2xs);
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -491,24 +557,24 @@ button {
 }
 .s-h1 {
   font-weight: 700;
-  font-size: 16px;
+  font-size: var(--fs-lg);
   text-align: center;
   margin: 30px 0 14px;
   letter-spacing: 0.01em;
 }
 .s-h2 {
   font-weight: 700;
-  font-size: 16px;
+  font-size: var(--fs-lg);
   margin: 26px 0 12px;
 }
 .s-h3 {
   font-weight: 700;
-  font-size: 15.5px;
+  font-size: var(--fs-body-plus);
   margin: 22px 0 10px;
 }
 .s-title {
   font-weight: 700;
-  font-size: 16px;
+  font-size: var(--fs-lg);
   text-align: center;
   margin: 22px 0 18px;
   text-decoration: underline;
@@ -525,7 +591,7 @@ button {
 /* selectable sections (body/headings carry mappings) */
 .s--mappable {
   cursor: pointer;
-  border-radius: 8px;
+  border-radius: var(--r-doc);
   transition: background 0.15s;
 }
 .s--mappable::before {
@@ -535,29 +601,29 @@ button {
   top: 2px;
   bottom: 2px;
   width: 3px;
-  border-radius: 99px;
+  border-radius: var(--r-pill);
   background: transparent;
   transition: background 0.15s;
 }
 .s--mappable:hover {
-  background: #faf7ef;
+  background: var(--surface-hover);
 }
 .s--mappable:hover::before {
   background: var(--line-2);
 }
-.s--active {
-  background: var(--sel) !important;
+.s--mappable.s--active {
+  background: var(--sel);
   box-shadow: 0 0 0 6px var(--sel);
 }
-.s--active::before {
-  background: var(--cobalt) !important;
+.s--mappable.s--active::before {
+  background: var(--cobalt);
 }
 .s--dimmed {
   opacity: 0.42;
 }
 .s--srchit {
-  background: #fbf3d6;
-  box-shadow: 0 0 0 6px #fbf3d6;
+  background: var(--srchit);
+  box-shadow: 0 0 0 6px var(--srchit);
 }
 
 /* caption (party block) */
@@ -580,7 +646,7 @@ button {
 }
 .caption__r {
   padding-left: 18px;
-  border-left: 2px solid #15202b;
+  border-left: 2px solid var(--caption-rule);
   min-height: 96px;
   display: flex;
   flex-direction: column;
@@ -588,7 +654,7 @@ button {
   gap: 6px;
 }
 .caption__r .row {
-  font-size: 14.5px;
+  font-size: var(--fs-md);
 }
 
 /* signature / certificate */
@@ -616,8 +682,8 @@ button {
    the fill means "done". Color/affordance intensifies on engagement. */
 .tok {
   font-family: var(--sans);
-  font-size: 0.9em;
-  border-radius: 3px;
+  font-size: var(--fs-tok);
+  border-radius: var(--r-xs);
   padding: 0 2px;
   cursor: pointer;
   white-space: nowrap;
@@ -627,8 +693,8 @@ button {
     color 0.14s;
 }
 .tok--empty {
-  background: rgba(228, 170, 66, 0.1);
-  color: #8a5d11;
+  background: var(--tok-empty-bg);
+  color: var(--tok-empty-ink);
   box-shadow: inset 0 -1.5px 0 var(--todo-line);
   font-weight: 500;
 }
@@ -636,7 +702,7 @@ button {
 .tok--filled {
   color: inherit;
   font-family: var(--serif);
-  font-size: 1em;
+  font-size: var(--fs-inherit);
   background: transparent;
   box-shadow: none;
   padding: 0;
@@ -645,11 +711,11 @@ button {
   color: var(--cobalt-deep);
   background: transparent;
   font-weight: 600;
-  box-shadow: inset 0 -1.5px 0 rgba(63, 105, 255, 0.28);
+  box-shadow: inset 0 -1.5px 0 var(--computed-underline);
   padding: 0 1px;
 }
 .tok--empty:hover {
-  background: rgba(228, 170, 66, 0.2);
+  background: var(--tok-empty-bg-hover);
 }
 .tok--filled:hover,
 .tok--computed:hover {
@@ -662,8 +728,8 @@ button {
 @keyframes tokflash {
   0% {
     background: var(--cobalt);
-    color: #fff;
-    box-shadow: 0 0 0 3px rgba(63, 105, 255, 0.22);
+    color: var(--on-accent);
+    box-shadow: var(--flash-ring);
   }
   100% {
   }
@@ -673,15 +739,15 @@ button {
    (cobalt = case law, green = statute/rule) reveals on hover and on locate. */
 .cite {
   font-family: var(--sans);
-  font-size: 0.84em;
+  font-size: var(--fs-cite);
   font-weight: 500;
-  color: #46586a;
+  color: var(--cite-ink);
   background: transparent;
-  border-radius: 3px;
+  border-radius: var(--r-xs);
   padding: 0 1px;
   cursor: pointer;
   white-space: nowrap;
-  box-shadow: inset 0 -1px 0 #c6d2dd;
+  box-shadow: inset 0 -1px 0 var(--cite-line);
   transition:
     background 0.14s,
     color 0.14s,
@@ -693,17 +759,17 @@ button {
   box-shadow: inset 0 -1.5px 0 var(--cobalt);
 }
 .cite.is-flash {
-  color: #fff;
+  color: var(--on-accent);
   background: var(--cobalt);
-  box-shadow: 0 0 0 3px rgba(63, 105, 255, 0.25);
+  box-shadow: var(--cite-flash-ring);
 }
 .cite--stat:hover {
-  color: #1d6b4a;
-  background: #e4f4ec;
-  box-shadow: inset 0 -1.5px 0 #1d6b4a;
+  color: var(--statute);
+  background: var(--statute-wash);
+  box-shadow: inset 0 -1.5px 0 var(--statute);
 }
 .cite--stat.is-flash {
-  background: #1d6b4a;
+  background: var(--statute);
 }
 /* the selected paragraph quietly lights up its own citations
    (but a citation being located keeps its stronger flash) */
@@ -720,11 +786,11 @@ button {
 .editing .s-title[contenteditable] {
   outline: 1px dashed var(--line-2);
   outline-offset: 4px;
-  border-radius: 6px;
+  border-radius: var(--r-md);
 }
 .editing .s-body[contenteditable]:focus {
   outline: 1px solid var(--cobalt);
-  background: #fcfbf7;
+  background: var(--surface-edit);
 }
 [contenteditable] .tok,
 [contenteditable] .cite {
@@ -750,7 +816,7 @@ button {
   border: 0;
   background: transparent;
   cursor: pointer;
-  font-size: 12.5px;
+  font-size: var(--fs-sm-plus);
   font-weight: 550;
   color: var(--muted);
   padding: 8px 11px 11px;
@@ -778,12 +844,12 @@ button {
 /* context: empty / hint state */
 .ctx-empty {
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--fs-base);
   line-height: 1.6;
 }
 .ctx-empty h4 {
   color: var(--ink);
-  font-size: 13.5px;
+  font-size: var(--fs-base-plus);
   margin: 0 0 6px;
 }
 .ctx-empty .keycap {
@@ -791,8 +857,8 @@ button {
   padding: 0 5px;
   border: 1px solid var(--line-2);
   border-bottom-width: 2px;
-  border-radius: 4px;
-  font-size: 11px;
+  border-radius: var(--r-sm);
+  font-size: var(--fs-2xs);
   background: var(--cream);
 }
 .ctx-empty ul {
@@ -804,7 +870,7 @@ button {
 }
 
 .ctx-sec-label {
-  font-size: 11px;
+  font-size: var(--fs-2xs);
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -820,7 +886,7 @@ button {
   border: 1px solid var(--line);
   border-radius: var(--r-card);
   padding: 14px 15px;
-  font-size: 13px;
+  font-size: var(--fs-base);
   line-height: 1.6;
   color: var(--ink-2);
 }
@@ -857,43 +923,43 @@ button {
 }
 .auth__short {
   font-weight: 650;
-  font-size: 13.5px;
+  font-size: var(--fs-base-plus);
   letter-spacing: -0.01em;
 }
 .auth__badge {
-  font-size: 10px;
+  font-size: var(--fs-3xs);
   font-weight: 600;
   padding: 2px 6px;
-  border-radius: 5px;
+  border-radius: var(--r-sm-plus);
   white-space: nowrap;
   flex: none;
 }
 .badge--binding {
-  background: #e4f4ec;
-  color: #1d6b4a;
+  background: var(--statute-wash);
+  color: var(--statute);
 }
 .badge--controlling {
   background: var(--cobalt-wash);
   color: var(--cobalt-deep);
 }
 .badge--persuasive {
-  background: #f1ece0;
+  background: var(--persuasive-wash);
   color: var(--muted);
 }
 .auth__full {
   font-family: var(--serif);
   font-style: italic;
-  font-size: 12.5px;
+  font-size: var(--fs-sm-plus);
   color: var(--ink-2);
   margin: 4px 0 0;
 }
 .auth__auth {
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
   color: var(--muted);
   margin-top: 3px;
 }
 .auth__prop {
-  font-size: 12.5px;
+  font-size: var(--fs-sm-plus);
   color: var(--ink-2);
   line-height: 1.5;
   margin: 7px 0 0;
@@ -905,7 +971,7 @@ button {
 }
 .auth__links a,
 .auth__links button {
-  font-size: 12px;
+  font-size: var(--fs-sm);
   color: var(--cobalt-deep);
   font-weight: 550;
   text-decoration: none;
@@ -919,7 +985,7 @@ button {
   text-decoration: underline;
 }
 .auth__uses {
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
   color: var(--muted);
 }
 
@@ -944,7 +1010,7 @@ button {
 }
 .src__t {
   font-weight: 650;
-  font-size: 13.5px;
+  font-size: var(--fs-base-plus);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -956,13 +1022,21 @@ button {
   flex: none;
 }
 .src__b {
-  font-size: 12.5px;
+  font-size: var(--fs-sm-plus);
   color: var(--muted);
   line-height: 1.5;
   margin: 6px 0 0;
 }
+/* A real <button>, reset to the inline affordance it has always looked like. */
 .src__open {
-  font-size: 12px;
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--fs-sm);
   color: var(--cobalt-deep);
   font-weight: 550;
   margin-top: 8px;
@@ -970,9 +1044,15 @@ button {
   align-items: center;
   gap: 4px;
 }
+.src__open .auth__uses {
+  margin-left: 6px;
+}
+.src__open:hover {
+  text-decoration: underline;
+}
 
 .filterbar {
-  font-size: 12px;
+  font-size: var(--fs-sm);
   color: var(--muted);
   margin: -4px 0 12px;
   display: flex;
@@ -990,7 +1070,7 @@ button {
 .scrim {
   position: fixed;
   inset: 0;
-  background: rgba(10, 38, 58, 0.42);
+  background: var(--scrim-bg);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s;
@@ -1026,7 +1106,7 @@ button {
 }
 .drawer__head h3 {
   margin: 0;
-  font-size: 15px;
+  font-size: var(--fs-body);
   font-weight: 650;
   flex: 1;
 }
@@ -1038,20 +1118,20 @@ button {
 /* rendered markdown */
 .md {
   font-family: var(--serif);
-  color: #1b2730;
-  font-size: 15px;
+  color: var(--md-ink);
+  font-size: var(--fs-body);
   line-height: 1.7;
   max-width: 64ch;
 }
 .md h1 {
   font-family: var(--sans);
-  font-size: 21px;
+  font-size: var(--fs-3xl);
   letter-spacing: -0.02em;
   margin: 26px 0 10px;
 }
 .md h2 {
   font-family: var(--sans);
-  font-size: 17px;
+  font-size: var(--fs-xl);
   letter-spacing: -0.01em;
   margin: 24px 0 8px;
   padding-bottom: 5px;
@@ -1059,7 +1139,7 @@ button {
 }
 .md h3 {
   font-family: var(--sans);
-  font-size: 14.5px;
+  font-size: var(--fs-md);
   margin: 18px 0 6px;
 }
 .md p {
@@ -1079,11 +1159,11 @@ button {
   margin: 22px 0;
 }
 .md code {
-  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  font-size: 12.5px;
+  font-family: var(--mono);
+  font-size: var(--fs-sm-plus);
   background: var(--cream);
   padding: 1px 5px;
-  border-radius: 4px;
+  border-radius: var(--r-sm);
 }
 .md a {
   color: var(--cobalt-deep);
@@ -1096,7 +1176,7 @@ button {
   width: 100%;
   margin: 14px 0;
   font-family: var(--sans);
-  font-size: 12.5px;
+  font-size: var(--fs-sm-plus);
 }
 .md th,
 .md td {
@@ -1111,10 +1191,10 @@ button {
 }
 .md blockquote {
   margin: 12px 0;
-  padding: 6px 14px;
-  border-left: 3px solid var(--cobalt);
+  padding: 10px 16px;
   background: var(--cobalt-wash);
-  border-radius: 0 8px 8px 0;
+  border-radius: var(--r-doc);
+  color: var(--ink-2);
 }
 
 /* toast */
@@ -1124,11 +1204,11 @@ button {
   left: 50%;
   transform: translateX(-50%) translateY(14px);
   background: var(--ink);
-  color: #fff;
-  font-size: 13px;
+  color: var(--on-accent);
+  font-size: var(--fs-base);
   font-weight: 500;
   padding: 10px 16px;
-  border-radius: 10px;
+  border-radius: var(--r-lg);
   box-shadow: var(--sh-pop);
   opacity: 0;
   pointer-events: none;
@@ -1169,7 +1249,7 @@ button {
     background: var(--cobalt-wash);
     border: 1px solid var(--line);
     border-radius: var(--r-card);
-    font-size: 12.5px;
+    font-size: var(--fs-sm-plus);
     color: var(--cobalt-deep);
   }
   body.show-rail-mobile .rail {
@@ -1177,6 +1257,111 @@ button {
     position: fixed;
     inset: 60px 0 0 0;
     z-index: var(--z-drawer);
+  }
+}
+
+/* ------------------------------------------------------------------- focus */
+/* A visible keyboard focus indicator is a floor, not a style choice
+   (~/.agents/DESIGN.md § Accessibility). Before 2026-09-27 only the two form
+   controls below had one, so every button, tab, citation chip, field token,
+   authority card and mappable paragraph was operable from the keyboard with no
+   indication of where the keyboard was. The blanket rule means a control added
+   later cannot ship without one; the rules under it only tighten the fit. */
+:focus-visible {
+  outline: 2px solid var(--cobalt);
+  outline-offset: 2px;
+}
+.btn:focus-visible,
+.iconbtn:focus-visible,
+.segmented button:focus-visible,
+.ctx__tab:focus-visible,
+.tok:focus-visible,
+.cite:focus-visible,
+.auth__links a:focus-visible,
+.auth__links button:focus-visible,
+.filterbar .clear:focus-visible,
+.md a:focus-visible {
+  outline-offset: 1px;
+}
+.auth:focus-visible,
+.src:focus-visible {
+  border-color: var(--cobalt);
+}
+.s--mappable:focus-visible {
+  outline-offset: 4px;
+}
+.ctx__body:focus-visible,
+.form:focus-visible,
+.drawer__body:focus-visible {
+  outline-offset: -2px;
+}
+.editing .s-body[contenteditable]:focus-visible,
+.editing .s-h1[contenteditable]:focus-visible,
+.editing .s-h2[contenteditable]:focus-visible,
+.editing .s-h3[contenteditable]:focus-visible,
+.editing .s-title[contenteditable]:focus-visible {
+  outline: 2px solid var(--cobalt);
+  outline-offset: 4px;
+}
+
+/* --------------------------------------------------------------- dark mode */
+/* Expressed entirely through the token layer, per DESIGN.md § Performance
+   ("Express dark mode through tokens rather than per-component overrides").
+   The print tokens are deliberately absent: paper is paper. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --cobalt: #7d9bff;
+    --cobalt-deep: #b3c5ff;
+    --cobalt-wash: #1c2745;
+    --ink: #e6ecf2;
+    --ink-2: #c2ced9;
+    --cream: #10161c;
+    --paper: #171f28;
+
+    --line: #2a343e;
+    --line-2: #3d4a56;
+    --muted: #a5b2bc;
+    --muted-2: #92a0aa;
+
+    --input-bg: #1d262f;
+    --surface-hover: #1c252e;
+    --surface-edit: #1d262f;
+    --stage-glow: #1c2531;
+    --stage-glow-fade: rgba(28, 37, 49, 0);
+    --paper-ink: #e0e8ef;
+    --md-ink: #e0e8ef;
+    --caption-rule: #c2ced9;
+    --on-accent: #0c1319;
+    --scrim-bg: rgba(0, 0, 0, 0.62);
+
+    --todo-bg: #3b2d12;
+    --todo-line: #9c7c2e;
+    --tok-empty-ink: #f3ce85;
+    --tok-empty-bg: rgba(228, 170, 66, 0.14);
+    --tok-empty-bg-hover: rgba(228, 170, 66, 0.26);
+
+    --filled-underline: #5169b0;
+    --cite-ink: #aebcc9;
+    --cite-line: #485661;
+    --computed-underline: rgba(125, 155, 255, 0.42);
+
+    --statute: #79d7a8;
+    --statute-wash: #16301f;
+    --persuasive-wash: #2b3037;
+
+    --sel: #1f2c48;
+    --srchit: #3b3519;
+
+    --focus-ring: 0 0 0 3px rgba(125, 155, 255, 0.3);
+    --focus-ring-strong: 0 0 0 3px rgba(125, 155, 255, 0.46);
+    --flash-ring: 0 0 0 3px rgba(125, 155, 255, 0.36);
+    --cite-flash-ring: 0 0 0 3px rgba(125, 155, 255, 0.4);
+
+    --sh-1: 0 1px 2px rgba(0, 0, 0, 0.5), 0 1px 1px rgba(0, 0, 0, 0.4);
+    --sh-pop: 0 12px 40px rgba(0, 0, 0, 0.62);
+    --sh-paper:
+      0 1px 1px rgba(0, 0, 0, 0.4), 0 4px 10px rgba(0, 0, 0, 0.34),
+      0 16px 40px rgba(0, 0, 0, 0.4);
   }
 }
 
@@ -1215,7 +1400,7 @@ button {
   }
   .stage {
     padding: 0;
-    background: #fff;
+    background: var(--print-paper);
   }
   .paper {
     box-shadow: none;
@@ -1223,8 +1408,8 @@ button {
     max-width: none;
     margin: 0;
     padding: 0;
-    font-size: 12pt;
-    color: #000;
+    font-size: var(--fs-print);
+    color: var(--print-ink);
   }
   .s--mappable::before,
   .s--active,
@@ -1237,8 +1422,8 @@ button {
     background: none !important;
   }
   .tok--empty {
-    background: #fff;
-    color: #000;
+    background: var(--print-paper);
+    color: var(--print-ink);
     box-shadow: none;
     font-weight: 700;
   }
@@ -1248,7 +1433,7 @@ button {
   .tok--filled,
   .tok--computed {
     background: none;
-    color: #000;
+    color: var(--print-ink);
     box-shadow: none;
     font-family: var(--serif);
     font-weight: normal;
@@ -1259,11 +1444,11 @@ button {
   .cite,
   .cite--stat {
     background: none;
-    color: #000;
+    color: var(--print-ink);
     font-family: var(--serif);
     font-weight: normal;
     padding: 0;
-    font-size: 1em;
+    font-size: var(--fs-inherit);
   }
   .cite::after {
     content: "";

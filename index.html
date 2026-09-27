@@ -27,7 +27,10 @@
         <div class="brand">
           <svg class="brand__mark" viewBox="0 0 32 32" aria-hidden="true">
             <rect width="32" height="32" rx="7" fill="var(--cobalt)" />
-            <path d="M9 8h9a5 5 0 0 1 0 10h-4l6 6h-4l-6-6v6H9z" fill="#fff" />
+            <path
+              d="M9 8h9a5 5 0 0 1 0 10h-4l6 6h-4l-6-6v6H9z"
+              fill="var(--on-accent)"
+            />
           </svg>
           <span class="brand__name">Recital</span>
           <span class="brand__doc">
@@ -38,7 +41,15 @@
 
         <div class="topbar__spacer"></div>
 
-        <div class="progress" title="Fields completed">
+        <div
+          class="progress"
+          id="progress"
+          role="progressbar"
+          aria-label="Fields completed"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuenow="0"
+        >
           <div class="progress__track">
             <div class="progress__fill" id="progFill"></div>
           </div>
@@ -97,30 +108,42 @@
           <div class="ctx__tabs" role="tablist">
             <button
               class="ctx__tab"
+              id="ctxTab-context"
               role="tab"
               aria-selected="true"
+              aria-controls="ctxBody"
               data-tab="context"
             >
               Context
             </button>
             <button
               class="ctx__tab"
+              id="ctxTab-authorities"
               role="tab"
               aria-selected="false"
+              aria-controls="ctxBody"
               data-tab="authorities"
             >
               Authorities
             </button>
             <button
               class="ctx__tab"
+              id="ctxTab-sources"
               role="tab"
               aria-selected="false"
+              aria-controls="ctxBody"
               data-tab="sources"
             >
               Sources
             </button>
           </div>
-          <div class="ctx__body" id="ctxBody"></div>
+          <div
+            class="ctx__body"
+            id="ctxBody"
+            role="tabpanel"
+            tabindex="0"
+            aria-labelledby="ctxTab-context"
+          ></div>
         </aside>
       </div>
     </div>

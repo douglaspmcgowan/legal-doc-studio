@@ -93,6 +93,61 @@ The full universal rules are `~/.agents/DESIGN.md`. Where a library entry and a 
 
 ## Goals
 
+Recital has to read as a real filing while behaving as a product. The document
+surface is a facsimile of an E.D. Pa. motion — serif, justified, court caption,
+signature block — and the chrome around it is product UI. Nothing in the
+document may look like a web page, and nothing in the chrome may look like a
+court form.
+
 ## Constraints
 
+- One accent hue page-wide: Sellit Cobalt, cohesive with amaxeliteseals.org.
+- One warm gray family, tuned to the cream canvas rather than to white.
+- Desktop-first. Below 1080px the rails are hidden and the document is shown
+  read-only with a notice; that is the app's whole responsive story and it is a
+  deliberate limit, not an omission.
+- No build step for the app itself. Anything that needs compiling cannot ship.
+
+## Typefaces
+
+| Role      | Family                                                                    |
+| --------- | ------------------------------------------------------------------------- |
+| Chrome    | `Inter Tight`, then `system-ui` / `-apple-system` / Segoe UI / Roboto      |
+| Document  | `Iowan Old Style`, then Palatino Linotype / Book Antiqua / Georgia / Times |
+| Monospace | `ui-monospace`, then SF Mono / Menlo / Consolas                           |
+
+The chrome face is loaded from Google Fonts and is **not vendored**, so offline
+the app falls back to `system-ui`. That is a known gap, recorded here rather
+than silently accepted.
+
+## Tokens
+
+`styles.css` opens with one `:root` block holding every colour, type size,
+radius, elevation and z-layer the product uses — 82 properties, referenced 273
+times. No hex, `rgb()`, `font-size` or `border-radius` literal exists anywhere
+outside it; `tests/smoke.spec.ts` fails the build if one appears.
+
+Token groups: brand, neutrals, surfaces, functional status (the amber "still
+blank" state), citations, authority weight, selection and search, focus and
+flash rings, type, type scale, shape, elevation, print, and the z-scale.
+
+A second `:root` inside `@media (prefers-color-scheme: dark)` redefines 42 of
+them. The print tokens (`--print-paper`, `--print-ink`) are deliberately not
+among them: paper is paper.
+
 ## Decisions
+
+- **Elevation is not yet declared once per surface.** `.paper`, `.auth` and
+  `.src` each carry a 1px border *and* a shadow, which the universal rules call
+  the ghost card. Correcting it changes what the app looks like, so it is a
+  recommendation rather than a change; see `LOG.md`, 2026-09-27.
+- **The 3px accent bar beside a selected paragraph stays.** It is an absolutely
+  positioned `::before`, not a `border-left`, and it is the app's only indicator
+  of which paragraph the Context panel is describing. Removing it would remove
+  the affordance, not the decoration.
+- **The party caption's 2px vertical rule stays.** It is a facsimile of a real
+  court caption block. `tests/smoke.spec.ts` allows exactly that one rule and
+  rejects every other coloured `border-left` of 2px or more.
+- **The completion meter scales on X rather than animating width**, because the
+  universal rules permit animating only `transform` and `opacity`. The track
+  clips to a pill, so the painted result is the same.

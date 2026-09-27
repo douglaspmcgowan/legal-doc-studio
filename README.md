@@ -33,20 +33,37 @@ Work is saved to the browser automatically.
 
 ## Stack
 
-Static single-page app — no build step. Plain HTML, CSS, and JavaScript.
+Static single-page app. The browser loads plain HTML, CSS, and JavaScript
+directly — there is no bundler, compiler, or runtime dependency. Node and
+TypeScript appear only in the build script, the type checker, and the tests.
 
-| File             | Purpose                                                             |
-| ---------------- | ------------------------------------------------------------------- |
-| `index.html`     | App shell                                                           |
-| `styles.css`     | Design system (Sellit Cobalt brand, product register)               |
-| `app.js`         | Render engine, field propagation, citation map, reference reader    |
-| `data.js`        | The document (sections + field/citation markers), fields, citations |
-| `refs-data.js`   | The four research memos, embedded (generated)                       |
-| `reference/*.md` | Source for the research memos                                       |
-| `build-refs.mjs` | Regenerates `refs-data.js` from `reference/*.md`                    |
+| File                | Purpose                                                             |
+| ------------------- | ------------------------------------------------------------------- |
+| `index.html`        | App shell                                                           |
+| `styles.css`        | Design system (Sellit Cobalt brand, product register)               |
+| `app.js`            | Render engine, field propagation, citation map, reference reader    |
+| `data.js`           | The document (sections + field/citation markers), fields, citations |
+| `refs-data.js`      | The four research memos, embedded (generated)                       |
+| `reference/*.md`    | Source for the research memos                                       |
+| `build-refs.ts`     | Regenerates `refs-data.js` from `reference/*.md`                    |
+| `types/studio.d.ts` | The document model that `data.js` publishes on `window`             |
+| `tests/`            | Playwright smoke, floor, and `@axe-core` accessibility tests        |
 
 To edit a research memo, change the file in `reference/` and run
-`node build-refs.mjs`.
+`npm run build` (`node build-refs.ts`). Node runs TypeScript directly, so the
+build script still needs no compile step.
+
+## Runtime
+
+Pinned, not assumed:
+
+| Runtime | Version  | Pinned in                   |
+| ------- | -------- | --------------------------- |
+| Node    | 24.x     | `.nvmrc`, `package.json`    |
+| Python  | 3.13     | `.python-version`           |
+
+Node is needed only for the build script, the type checker, and the tests.
+Python is only the static dev server; any static host serves the app.
 
 ## Run locally
 
@@ -54,6 +71,39 @@ To edit a research memo, change the file in `reference/` and run
 python -m http.server 8911
 # open http://localhost:8911
 ```
+
+## Develop
+
+```bash
+npm install          # devDependencies only; the app itself has none
+npm run build        # regenerate refs-data.js from reference/*.md
+npm run typecheck    # tsc --noEmit, strict
+npm test             # Playwright: smoke, design floor, axe accessibility
+```
+
+`npm test` starts its own static server on port 8912 and asserts, among other
+things, that the primary surface has no serious or critical axe violations,
+that every interactive element has a visible keyboard focus indicator, that no
+colour, font-size or radius literal has escaped the `:root` token layer, and
+that the dark-scheme block repaints the surface without touching the print
+tokens.
+
+`app.js` is deliberately outside the `checkJs` set in `tsconfig.json`: it is
+875 lines of hand-rolled DOM code and, measured 2026-09-27, reports 90 strict
+errors — almost all implicit-`any` callback parameters. `types/studio.d.ts`
+already types the data model it reads, so that is the starting point for the
+pass that closes them.
+
+## Accessibility and appearance
+
+- Every interactive control has a visible `:focus-visible` indicator, and the
+  document's field tokens, citation chips, paragraphs, and card actions are all
+  operable from the keyboard.
+- Colour is expressed entirely through custom properties in a single `:root`
+  block, with a `prefers-color-scheme: dark` block that redefines the same
+  tokens. The print tokens are deliberately outside that override: paper is
+  paper.
+- `prefers-reduced-motion: reduce` collapses every transition and animation.
 
 ## Note
 

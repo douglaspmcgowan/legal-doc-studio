@@ -285,7 +285,8 @@
     const pct = fillable.length
       ? Math.round((done / fillable.length) * 100)
       : 0;
-    $("#progFill").style.width = pct + "%";
+    $("#progFill").style.transform = `scaleX(${pct / 100})`;
+    $("#progress").setAttribute("aria-valuenow", String(pct));
     $("#progTxt").textContent = `${done} / ${fillable.length} fields`;
     // form dots
     $$("#form .field").forEach((el) => {
@@ -372,10 +373,19 @@
   function wireDoc() {
     // section selection
     $$("#paper .s--mappable").forEach((sec) => {
+      sec.setAttribute("tabindex", "0");
       sec.addEventListener("click", (e) => {
         if (e.target.closest(".tok") || e.target.closest(".cite")) return;
         if (state.mode === "edit") return;
         selectSection(sec.dataset.sec);
+      });
+      sec.addEventListener("keydown", (e) => {
+        if (e.target !== sec) return;
+        if (state.mode === "edit") return;
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          selectSection(sec.dataset.sec);
+        }
       });
     });
     // tokens -> focus matching field
@@ -538,7 +548,7 @@
     return `<div class="src" data-src="${r.id}">
       <div class="src__t">${docIcon()} ${esc(r.title)}</div>
       <div class="src__b">${esc(r.blurb)}</div>
-      <div class="src__open">Read full document → <span class="auth__uses" style="margin-left:6px">used by ${uses} section${uses === 1 ? "" : "s"}</span></div>
+      <button class="src__open" type="button">Read full document → <span class="auth__uses">used by ${uses} section${uses === 1 ? "" : "s"}</span></button>
     </div>`;
   }
   const docIcon = () =>
@@ -596,7 +606,7 @@
     $$("#ctxBody .src").forEach((el) => {
       el.addEventListener("click", (e) => {
         if (e.detail === 2) return;
-        // single click highlights; the explicit link reads
+        // single click highlights; the explicit button reads
         toggleSourceFilter(el.dataset.src);
       });
       $(".src__open", el).addEventListener("click", (e) => {
@@ -652,6 +662,7 @@
     $$(".ctx__tab").forEach((t) =>
       t.setAttribute("aria-selected", String(t.dataset.tab === tab)),
     );
+    $("#ctxBody").setAttribute("aria-labelledby", `ctxTab-${tab}`);
     if (tab === "context") renderContext();
     else if (tab === "authorities") renderAuthorities(flashId);
     else renderSources();
