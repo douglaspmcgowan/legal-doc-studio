@@ -11,9 +11,7 @@ changing what it looks like. Verdict `BASELINE`: the framework does not move.
 
 ## Queue
 
-- [ ] Close the 90 strict type errors in `app.js` and add it to the `checkJs`
-      set in `tsconfig.json`. `types/studio.d.ts` already types the data model
-      it reads; the remainder is mostly implicit-`any` callback parameters.
+<!-- Nothing queued. The floor is applied; what remains is in Needs decision. -->
 
 ## Blocked
 
@@ -61,19 +59,28 @@ repair agent's. Full reasoning in `LOG.md`, 2026-09-27.
       `--muted-2`, and the missing focus indicators.
 - [x] `DESIGN.md` design record filled in; it was empty headings.
 - [x] `verify` CI workflow added alongside `gitleaks`.
+- [x] `app.js` joined the type-checked set and its 90 strict errors are closed
+      with JSDoc. It stays a `.js` file on purpose: it is loaded by
+      `<script src>` and renaming it to `.ts` would mean adding a compiler,
+      which `BASELINE` forbids. Six executable deltas, each a semantic no-op;
+      computed style byte-identical across all 383 elements.
+- [x] The suite is deterministic. `fullyParallel` with the default worker count
+      failed four to six of nine tests on a busy machine; it is serial now and
+      passed 9/9 three runs in a row.
 
 ## Verification
 
-- `npx tsc --noEmit` -> exit 0
-- `npx playwright test` -> 9 passed
+- `npx tsc --noEmit` -> exit 0, with `app.js` in the checked set
+- `npx playwright test` -> 9 passed, three consecutive runs
 - `node build-refs.ts` -> exit 0, `git diff refs-data.js` clean apart from the
   generator name in the header comment
 - `node ~/.agents/skills/impeccable/scripts/detect.mjs --json index.html styles.css`
   -> `[]`
 - `gitleaks detect` and `gitleaks dir .` -> no leaks found
 - `git diff --check` -> clean
-- Computed-style diff over 383 elements: 371 byte-identical, 12 deltas each
-  traced to a named floor fix. See `LOG.md`.
+- Computed-style diff over 383 elements: 371 byte-identical against the stage-1
+  baseline, 12 deltas each traced to a named floor fix. The second pass added 0
+  further deltas — all 383 byte-identical. See `LOG.md`.
 - Next: `npm run typecheck && npm test`
 
 <!--

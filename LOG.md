@@ -1,5 +1,74 @@
 # Work log
 
+## 2026-09-27 — App Repair stage 2, second pass: app.js under strict types
+
+The first pass left `app.js` out of the type-checked set with 90 strict errors
+and named it as remaining work. This pass closed it, and closed a defect the
+first pass did not notice in its own test harness.
+
+### `app.js` is type-checked, and the change is comment-only by construction
+
+`app.js` is loaded by `<script src>` in an app with no bundler, so renaming it to
+`.ts` would mean adding a compiler, which the `BASELINE` verdict forbids. The
+floor-level equivalent is `checkJs` coverage in place, so `app.js` joined
+`tsconfig.json`'s `include` and the 90 errors were closed with JSDoc.
+
+`npx tsc --noEmit` exits 0 with `app.js` in the checked set.
+
+Six executable deltas exist and they are the whole list; every other change is a
+comment. Each is semantically identical to what it replaced:
+
+| Change                                             | Why it is a no-op                                                      |
+| -------------------------------------------------- | ---------------------------------------------------------------------- |
+| `isNaN(dt)` to `isNaN(dt.getTime())`               | `isNaN` coerces a `Date` through `valueOf`, which is `getTime`          |
+| `(a - bDate)` to `(a.getTime() - bDate.getTime())` | the same coercion, written out                                         |
+| `f.options` to `(f.options \|\| [])`               | only reached when `f.type === "select"`, where `options` is always set  |
+| `const t = e.target` at three handlers             | binds a value the next line already read                               |
+| `esc` and `escAttr` entity maps reformatted        | same keys, same values, Prettier's line breaks                         |
+| `let m` gains a type annotation                    | annotation only                                                        |
+
+`window.__recital`, the test hook, is now declared on `Window` in
+`types/studio.d.ts` rather than asserted at the assignment.
+
+**Proof that it changed no pixel.** The computed style of all 383 elements over
+49 properties was captured with the new `app.js`, with the committed `app.js`
+restored, and with the new one again. All three dumps are **byte-identical**, so
+the measured noise floor is 0 and the delta is 0. Zero console errors on load in
+every capture; 30 sections, 20 fields and 28 citation chips render in each.
+
+### The test suite was green only on an idle machine
+
+Re-running the first pass's suite produced three, four, five and six failures on
+successive runs, all `waitForSelector` timeouts, while the app itself rendered
+perfectly under a hand-driven browser check. The cause was `fullyParallel` with
+the default worker count: six Chromium workers, each loading axe, against
+python's `http.server`, on a machine running other repair lanes. The same nine
+tests passed in 41s at `--workers=1`.
+
+`playwright.config.ts` is now `fullyParallel: false`, `workers: 1`,
+`timeout: 60_000`. Three consecutive runs: 9 passed, 9 passed, 9 passed. Nine
+tests do not need parallelism, and a suite that only goes green on an idle box is
+not a gate. `waitUntil: "load"` was tried as `"domcontentloaded"` first, made no
+difference, and was reverted rather than left as noise in the diff.
+
+### Floor row, this pass
+
+| Column                             | Before this pass | After    |
+| ---------------------------------- | ---------------- | -------- |
+| Files in the type-checked set      | 5                | 6        |
+| `app.js` strict errors             | 90               | 0        |
+| Test suite result, three runs      | 6/9, 5/9, 4/9    | 9/9 x3   |
+| Computed-style deltas vs committed | n/a              | 0 of 383 |
+| Slop-detector findings             | 0                | 0        |
+| Console errors on load             | 0                | 0        |
+
+Unchanged and re-verified: `node build-refs.ts` exit 0 with `refs-data.js`
+unchanged, the slop detector returns `[]`, `git diff --check` clean, `gitleaks
+dir .` and `gitleaks detect` over 19 commits report no leaks.
+
+Nothing visual was touched. The recommendations recorded in the first pass below
+still stand and are still Douglas's call.
+
 ## 2026-09-27 — App Repair stage 2: the non-visual floor
 
 Verdict `BASELINE`: the framework does not move. The floor was applied in place.

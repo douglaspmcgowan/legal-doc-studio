@@ -17,6 +17,6 @@
     "verbatimModuleSyntax": true,
     "skipLibCheck": true
   },
-  "include": ["types/studio.d.ts", "build-refs.ts", "data.js", "tests/**/*.ts", "playwright.config.ts"],
+  "include": ["types/studio.d.ts", "build-refs.ts", "data.js", "app.js", "tests/**/*.ts", "playwright.config.ts"],
   "exclude": ["node_modules", "refs-data.js"]
 }
