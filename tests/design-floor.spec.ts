@@ -139,7 +139,9 @@ test("page identity: theme-color and a resolvable og:image", async ({ page, requ
 
 test("the authority card responds to its container, not the viewport", async ({ page }) => {
   await ready(page);
-  await page.click('.ctx__tab[data-tab="authorities"]');
+  // Context cards carry the full authority; the Authorities tab is a table.
+  await page.evaluate(() => window.__recital.selectSection("mem-std-1"));
+  await expect(page.locator("#ctxBody .auth").first()).toBeVisible();
   const pad = () =>
     page.evaluate(
       () => getComputedStyle(document.querySelector(".auth")!).paddingLeft,

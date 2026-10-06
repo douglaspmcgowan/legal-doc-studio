@@ -83,7 +83,7 @@
           <button data-mode="edit" aria-pressed="false">Edit</button>
         </div>
 
-        <button class="btn" id="btnPrint" title="Print or save as PDF">
+        <button class="btn btn--primary" id="btnPrint" title="Print or save as PDF">
           <svg
             viewBox="0 0 24 24"
             fill="none"
@@ -111,8 +111,8 @@
               Highlighted blanks update everywhere they appear.
             </p>
             <div class="rail__actions">
-              <button class="btn" id="btnSample">Use sample data</button>
-              <button class="btn" id="btnClear">Clear</button>
+              <button class="btn btn--tonal" id="btnSample">Use sample data</button>
+              <button class="btn btn--text" id="btnClear">Clear</button>
             </div>
           </div>
           <div class="form" id="form"></div>
@@ -201,7 +201,7 @@
       <div class="drawer__body"><div class="md" id="drawerBody"></div></div>
     </div>
 
-    <div class="toast" id="toast"></div>
+    <div class="toast" id="toast" role="status"></div>
 
     <script src="refs-data.js"></script>
     <script src="data.js"></script>

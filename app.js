@@ -40,6 +40,25 @@
     );
   }
 
+  /**
+   * Paragraph numbers (1..N in document order) of every section that cites an
+   * authority, whether through its `citations` list or an inline [[marker]].
+   * The table of authorities prints these beside each entry.
+   *
+   * @param {string} id
+   * @returns {number[]}
+   */
+  function paragraphsCiting(id) {
+    const marker = `[[${id}]]`;
+    /** @type {number[]} */
+    const out = [];
+    DOC.forEach((s, i) => {
+      if ((s.citations || []).includes(id) || s.html.includes(marker))
+        out.push(i + 1);
+    });
+    return out;
+  }
+
   const STORE_KEY = "recital.v1";
   /**
    * @type {{
@@ -212,7 +231,8 @@
     const c = citeById[id];
     if (!c) return esc("[[" + id + "]]");
     const stat = c.kind !== "case" ? " cite--stat" : "";
-    return `<span class="cite${stat}" data-cite="${id}" role="button" tabindex="0" title="${escAttr(c.full)}">${esc(c.short)}</span>`;
+    const kind = c.kind === "statute" ? "Statute: " : c.kind === "rule" ? "Rule: " : "";
+    return `<span class="cite${stat}" data-cite="${id}" role="button" tabindex="0" title="${escAttr(kind + c.full)}">${esc(c.short)}</span>`;
   }
   /** @param {string} text */
   function renderMarkers(text) {
@@ -295,7 +315,9 @@
     const paper = $("#paper");
     let html = "";
     let part = null;
+    let n = 0;
     for (const s of DOC) {
+      n += 1;
       if (s.part && s.part !== part) {
         part = s.part;
         if (part === "Memorandum")
@@ -318,7 +340,7 @@
           /^<(p|div) class="(s-body|s-h1|s-h2|s-h3|s-title)"/,
           '<$1 class="$2" contenteditable="true"',
         );
-      html += `<section class="${cls}" data-sec="${s.id}">${block}</section>`;
+      html += `<section class="${cls}" data-sec="${s.id}"><span class="pnum" data-pn="${n}">${n}</span>${block}</section>`;
     }
     paper.innerHTML = html;
     wireDoc();
@@ -413,7 +435,7 @@
     }
     const cls = (f.type === "computed" ? " field--computed" : "") + done;
     return `<div class="field${cls}" data-field="${f.id}">
-      <label for="in-${f.id}">${f.type !== "computed" ? '<span class="field__dot"></span>' : ""}${esc(f.label)}</label>
+      <label for="in-${f.id}"><span class="field__name">${esc(f.label)}</span> ${f.type !== "computed" ? '<span class="field__blank">blank</span>' : ""}</label>
       ${control.replace("<input", `<input id="in-${f.id}"`)}
       ${f.hint ? `<div class="field__hint">${esc(f.hint)}</div>` : ""}
     </div>`;
@@ -552,11 +574,11 @@
         <h4>Trace any part of the document</h4>
         <p>Click a <strong>paragraph or heading</strong> to see the authorities behind it, the research it draws on, and a note on how it was derived.</p>
         <ul>
-          <li>Click a <strong>blue citation</strong> to highlight every place it appears.</li>
-          <li>Open the <strong>Authorities</strong> tab for the full table of cases and statutes.</li>
+          <li>Click an <strong>oxblood citation</strong> to highlight every place it appears.</li>
+          <li>Open <strong>Authorities</strong> for the table of authorities and the paragraphs that cite each one.</li>
           <li>Open <strong>Sources</strong> to read the underlying research memos.</li>
         </ul>
-        <p>Fill the highlighted blanks on the left — each value flows through the whole document at once.</p>
+        <p>Fill the highlighted blanks on the left. Each value flows through the whole document at once.</p>
       </div>`;
       return;
     }
@@ -649,42 +671,175 @@
     );
   }
 
+  /* ------------------------------------------------- loading / empty / error */
+  /** @param {"context" | "authorities" | "sources" | "drawer"} kind */
+  function skeletonHTML(kind) {
+    const bar = (/** @type {string} */ w) =>
+      `<span class="skel__bar skel__bar--${w}"></span>`;
+    let inner = "";
+    if (kind === "authorities") {
+      const row = `<div class="skel__row">${bar("name")}${bar("lead")}${bar("num")}</div>`;
+      inner = `${bar("head")}${row.repeat(4)}${bar("head")}${row.repeat(2)}`;
+    } else if (kind === "sources") {
+      const row = `<div class="skel__row skel__row--src">${bar("title")}${bar("btn")}</div>${bar("meta")}`;
+      inner = row.repeat(4);
+    } else if (kind === "drawer") {
+      inner = `${bar("head")}${bar("line")}${bar("line")}${bar("short")}${bar("line")}${bar("line")}${bar("short")}`;
+    } else {
+      inner = `${bar("meta")}${bar("block")}${bar("meta")}${bar("block")}`;
+    }
+    return `<div class="skel" role="status"><span class="sr-only">Loading</span>${inner}</div>`;
+  }
+
+  /**
+   * @param {string} title @param {string} text
+   * @param {string} [action] button markup, already escaped
+   */
+  function emptyHTML(title, text, action) {
+    return `<div class="state state--empty"><h4>${esc(title)}</h4><p>${esc(text)}</p>${action || ""}</div>`;
+  }
+  /** @param {string} title @param {string} text @param {string} [action] */
+  function errorHTML(title, text, action) {
+    return `<div class="state state--error" role="alert"><h4>${esc(title)}</h4><p>${esc(text)}</p>${action || ""}</div>`;
+  }
+  const toContextBtn = `<button class="btn btn--tonal" type="button" data-goto="context">Back to Context</button>`;
+  function wireGoto() {
+    $$("#ctxBody [data-goto]").forEach((b) =>
+      b.addEventListener("click", () => setTab(b.dataset.goto)),
+    );
+  }
+
+  /** Show the final-shape skeleton in the right-hand panel. @param {"context" | "authorities" | "sources"} tab */
+  function setLoading(tab) {
+    const body = $("#ctxBody");
+    body.setAttribute("aria-busy", "true");
+    body.innerHTML = skeletonHTML(tab);
+  }
+
+  /** @type {(el: Element) => void} */
+  const unbusy = (el) => el.removeAttribute("aria-busy");
+
   /* -------------------------------------------------------- authorities tab */
+  function clearTrace() {
+    $$(".is-tracing").forEach((el) => el.classList.remove("is-tracing"));
+  }
+  /** Mark a table-of-authorities row and the margin numbers it cites. @param {Element} row @param {string} id @param {boolean} on */
+  function trace(row, id, on) {
+    row.classList.toggle("is-tracing", on);
+    paragraphsCiting(id).forEach((n) => {
+      const pn = $(`#paper .pnum[data-pn="${n}"]`);
+      if (pn) pn.classList.toggle("is-tracing", on);
+    });
+  }
+
+  const TOA_GROUPS = /** @type {const} */ ([
+    ["case", "Cases"],
+    ["statute", "Statutes"],
+    ["rule", "Rules"],
+  ]);
+
+  /** @param {Cite} c @param {boolean} open */
+  function toaRowHTML(c, open) {
+    const pages = paragraphsCiting(c.id);
+    const uses = (citeUses[c.id] || []).length;
+    const detail = open
+      ? `<div class="toa__detail">
+          <span class="auth__badge ${badgeClass(c.weight)}">${esc(c.weight)}</span>
+          <div class="auth__full">${esc(c.full)}</div>
+          <div class="auth__prop">${esc(c.proposition)}</div>
+          <div class="auth__links">
+            <button data-locate="${c.id}">Locate in document${uses > 1 ? ` (${uses})` : ""}</button>
+            ${c.source ? `<button data-readsrc="${c.source}">Source memo</button>` : ""}
+            ${c.url ? `<a href="${escAttr(c.url)}" target="_blank" rel="noopener">Full text ↗</a>` : ""}
+          </div>
+        </div>`
+      : "";
+    return `<li class="toa__row${open ? " is-open" : ""}" data-auth="${c.id}">
+      <button class="toa__main" type="button" data-toa="${c.id}"${open ? ' aria-current="true"' : ""}>
+        <span class="toa__name toa__name--${c.kind}">${esc(c.short)}</span>
+        <span class="toa__leader" aria-hidden="true"></span>
+        <span class="toa__pages">${pages.length ? esc(pages.join(", ")) : "not cited"}</span>
+      </button>${detail}
+    </li>`;
+  }
+
   /** @param {string} [flashId] */
   function renderAuthorities(flashId) {
     const body = $("#ctxBody");
-    const order = ["case", "statute", "rule"];
-    const sorted = [...CITES].sort(
-      (a, b) => order.indexOf(a.kind) - order.indexOf(b.kind),
-    );
-    body.innerHTML =
-      `<div class="filterbar">${CITES.length} authorities: cases, statutes &amp; rules</div>` +
-      sorted.map((c) => authCard(c)).join("");
+    if (!CITES.length) {
+      body.innerHTML = emptyHTML(
+        "No authorities cited yet",
+        "Cases, statutes and rules appear here, with the paragraphs that cite them, once the document cites one.",
+        toContextBtn,
+      );
+      wireGoto();
+      return;
+    }
+    const groups = TOA_GROUPS.map(([kind, label]) => {
+      const items = CITES.filter((c) => c.kind === kind);
+      return items.length
+        ? `<h3 class="toa__group">${label}</h3><ul class="toa__list">${items.map((c) => toaRowHTML(c, c.id === flashId)).join("")}</ul>`
+        : "";
+    }).join("");
+    body.innerHTML = `<p class="toa__lede">${CITES.length} authorities, with the paragraph numbers that cite each.</p>${groups}`;
     wireCtxCards();
+    $$("#ctxBody .toa__row").forEach((row) => {
+      const id = row.dataset.auth;
+      const on = () => trace(row, id, true);
+      const off = () => trace(row, id, false);
+      row.addEventListener("mouseenter", on);
+      row.addEventListener("mouseleave", off);
+      row.addEventListener("focusin", on);
+      row.addEventListener("focusout", off);
+    });
+    $$("#ctxBody .toa__main").forEach((b) =>
+      b.addEventListener("click", () => locateCitation(b.dataset.toa, true)),
+    );
     if (flashId) {
-      const card = $(`#ctxBody .auth[data-auth="${flashId}"]`);
-      if (card) {
-        card.classList.add("is-flash");
-        card.scrollIntoView({ block: "center", behavior: "smooth" });
-        setTimeout(() => card.classList.remove("is-flash"), 1400);
+      const row = $(`#ctxBody .toa__row[data-auth="${flashId}"]`);
+      if (row) {
+        row.classList.add("is-flash");
+        row.scrollIntoView({ block: "center", behavior: "smooth" });
+        setTimeout(() => row.classList.remove("is-flash"), 1400);
       }
     }
   }
 
   /* ------------------------------------------------------------ sources tab */
+  /** @param {RefMeta} r */
+  function sourceRowHTML(r) {
+    const uses = (srcUses[r.id] || []).length;
+    const active = state.sourceFilter === r.id;
+    return `<li class="srow${active ? " is-active" : ""}" data-src="${r.id}">
+      <button class="srow__main" type="button" aria-pressed="${active}">
+        <span class="srow__title">${docIcon()} ${esc(r.title)}</span>
+        <span class="srow__kind">Research memo, used by ${uses} section${uses === 1 ? "" : "s"}</span>
+        <span class="srow__blurb">${esc(r.blurb)}</span>
+      </button>
+      <button class="btn btn--text srow__open" type="button" aria-label="Open ${escAttr(r.title)}">Open</button>
+    </li>`;
+  }
+
   function renderSources() {
     const body = $("#ctxBody");
+    if (!REF_META.length) {
+      body.innerHTML = emptyHTML(
+        "No sources attached yet",
+        "Research memos that support the motion are listed here once they are added.",
+        toContextBtn,
+      );
+      wireGoto();
+      return;
+    }
     const filt = state.sourceFilter
-      ? `<div class="filterbar">Highlighting sections that use <strong>${esc(refMetaById[state.sourceFilter].title)}</strong> <span class="clear" data-clearsrc>Clear</span></div>`
+      ? `<div class="filterbar">Highlighting sections that use <strong>${esc(refMetaById[state.sourceFilter].title)}</strong> <button class="btn btn--text" type="button" data-clearsrc>Clear</button></div>`
       : `<div class="filterbar">Four research memos underpin this motion.</div>`;
-    body.innerHTML = filt + REF_META.map((r) => srcCard(r)).join("");
-    $$("#ctxBody .src").forEach((el) => {
-      el.addEventListener("click", (/** @type {MouseEvent} */ e) => {
-        if (e.detail === 2) return;
-        // single click highlights; the explicit button reads
-        toggleSourceFilter(el.dataset.src);
-      });
-      $(".src__open", el).addEventListener("click", (/** @type {Event} */ e) => {
+    body.innerHTML = `${filt}<ul class="srow__list">${REF_META.map(sourceRowHTML).join("")}</ul>`;
+    $$("#ctxBody .srow").forEach((el) => {
+      $(".srow__main", el).addEventListener("click", () =>
+        toggleSourceFilter(el.dataset.src),
+      );
+      $(".srow__open", el).addEventListener("click", (/** @type {Event} */ e) => {
         e.stopPropagation();
         openRef(el.dataset.src);
       });
@@ -741,9 +896,25 @@
       t.setAttribute("aria-selected", String(t.dataset.tab === tab)),
     );
     $("#ctxBody").setAttribute("aria-labelledby", `ctxTab-${tab}`);
-    if (tab === "context") renderContext();
-    else if (tab === "authorities") renderAuthorities(flashId);
-    else renderSources();
+    clearTrace();
+    // The skeleton stands in the panel's final shape while the content is built;
+    // the build runs in a microtask, so a caller never observes a half-built panel.
+    setLoading(tab);
+    queueMicrotask(() => {
+      if (state.tab !== tab) return;
+      const body = $("#ctxBody");
+      try {
+        if (tab === "context") renderContext();
+        else if (tab === "authorities") renderAuthorities(flashId);
+        else renderSources();
+      } catch (err) {
+        body.innerHTML = errorHTML(
+          "This panel could not be built",
+          "Something went wrong while building it. Choose the tab again to retry.",
+        );
+      }
+      unbusy(body);
+    });
   }
 
   /** @param {"fill" | "edit" | "read"} mode */
@@ -763,18 +934,35 @@
   }
 
   /* ----------------------------------------------------------- ref drawer */
+  /** Latest open request, so a slow render never overwrites a newer one. */
+  let refToken = 0;
   /** @param {string} id */
   function openRef(id) {
     const meta = refMetaById[id];
-    const md = REFS[id];
+    const body = $("#drawerBody");
+    const token = ++refToken;
     $("#drawerTitle").textContent = meta ? meta.title : "Reference";
-    $("#drawerBody").innerHTML = md
-      ? renderMarkdown(md)
-      : "<p>Reference text unavailable.</p>";
+    body.innerHTML = skeletonHTML("drawer");
+    body.setAttribute("aria-busy", "true");
     $("#drawer").classList.add("open");
     $("#scrim").classList.add("open");
-    $("#drawerBody").parentElement.scrollTop = 0;
+    body.parentElement.scrollTop = 0;
     $("#drawerClose").focus();
+    setTimeout(() => {
+      if (token !== refToken) return;
+      const md = REFS[id];
+      if (md) {
+        body.innerHTML = renderMarkdown(md);
+      } else {
+        body.innerHTML = errorHTML(
+          "Reference not found",
+          "This reference could not be opened. Close and choose it again from Sources.",
+          `<button class="btn btn--text" type="button" data-closeref>Close</button>`,
+        );
+        $("[data-closeref]", body).addEventListener("click", closeRef);
+      }
+      unbusy(body);
+    }, 0);
   }
   function closeRef() {
     $("#drawer").classList.remove("open");
@@ -964,7 +1152,15 @@
       if (e.key === "Escape") closeRef();
     });
 
-    window.__recital = { state, setTab, selectSection, locateCitation }; // test hook
+    window.__recital = {
+      state,
+      setTab,
+      selectSection,
+      locateCitation,
+      paragraphsCiting,
+      openRef,
+      setLoading,
+    }; // test hook
   }
 
   if (document.readyState === "loading")

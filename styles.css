@@ -40,6 +40,12 @@
   --error-wash: color-mix(in oklab, var(--status-error) 10%, var(--paper));
   --persuasive-wash: color-mix(in oklab, var(--gray) 12%, var(--paper));
   --scrim-bg: color-mix(in oklab, var(--shade) 45%, transparent);
+  --tonal-hover: color-mix(in oklab, var(--oxblood) 14%, var(--paper));
+  --tonal-active: color-mix(in oklab, var(--oxblood) 20%, var(--paper));
+  --disabled-bg: color-mix(in oklab, var(--gray) 14%, var(--paper));
+  --disabled-ink: color-mix(in oklab, var(--gray) 62%, var(--paper));
+  --field-rule: color-mix(in oklab, var(--gray) 55%, var(--paper));
+  --skel: color-mix(in oklab, var(--gray) 16%, var(--paper));
 
   /* Focus and flash rings */
   --focus-ring: 0 0 0 3px color-mix(in oklab, var(--oxblood) 16%, transparent);
@@ -112,6 +118,7 @@
     background-color var(--dur-1) var(--ease-out),
     border-color var(--dur-1) var(--ease-out),
     box-shadow var(--dur-1) var(--ease-out),
+    text-decoration-color var(--dur-1) var(--ease-out),
     transform var(--dur-1) var(--ease-out);
 }
 
@@ -209,14 +216,13 @@ button {
   flex: 1;
 }
 
-/* segmented mode control */
+/* segmented mode control: the selected segment sits on paper, ink underline */
 .segmented {
   display: inline-flex;
   background: var(--canvas);
-  border: 1px solid var(--surface-border);
   border-radius: var(--r-sm);
   padding: var(--sp-1);
-  gap: var(--sp-2);
+  gap: var(--sp-1);
 }
 .segmented button {
   position: relative;
@@ -228,17 +234,21 @@ button {
   min-height: var(--hit);
   min-width: var(--hit);
   padding: var(--sp-2) var(--sp-4);
-  border-radius: var(--r-sm);
+  border-radius: var(--r-none);
   cursor: pointer;
   transition: var(--tr-ui);
 }
 .segmented button:hover {
   color: var(--ink);
+  background: var(--tint);
+}
+.segmented button:active {
+  transform: scale(0.98);
 }
 .segmented button[aria-pressed="true"] {
   background: var(--paper);
-  color: var(--oxblood);
-  box-shadow: var(--elev-1);
+  color: var(--ink);
+  box-shadow: inset 0 -2px 0 var(--ink);
 }
 
 /* progress meter */
@@ -270,14 +280,15 @@ button {
   white-space: nowrap;
 }
 
-/* buttons */
+/* buttons: three tiers, no outlined tier.
+   primary = filled oxblood, tonal = accent wash, text = underlined text */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--sp-2);
-  border: 1px solid var(--rule-2);
-  background: var(--paper);
+  border: 0;
+  background: transparent;
   color: var(--ink);
   font-size: var(--fs-md);
   font-weight: 600;
@@ -288,28 +299,48 @@ button {
   cursor: pointer;
   transition: var(--tr-ui);
 }
-.btn:hover {
-  background: var(--canvas);
-  border-color: var(--gray);
-}
 .btn:active {
-  transform: scale(0.97);
+  transform: scale(0.98);
 }
 .btn--primary {
   background: var(--oxblood);
-  border-color: var(--oxblood);
   color: var(--on-accent);
 }
 .btn--primary:hover {
   background: var(--oxblood-hover);
-  border-color: var(--oxblood-hover);
 }
-.btn--ghost {
-  border-color: transparent;
+.btn--tonal {
+  background: var(--accent-wash);
+  color: var(--oxblood);
+}
+.btn--tonal:hover {
+  background: var(--tonal-hover);
+}
+.btn--tonal:active {
+  background: var(--tonal-active);
+}
+.btn--text {
   background: transparent;
+  color: var(--oxblood);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
 }
-.btn--ghost:hover {
-  background: var(--canvas);
+.btn--text:hover {
+  background: var(--accent-wash);
+  text-decoration-thickness: 2px;
+}
+.btn:disabled,
+.btn[aria-disabled="true"] {
+  background: var(--disabled-bg);
+  color: var(--disabled-ink);
+  cursor: not-allowed;
+  transform: none;
+}
+.btn--text:disabled,
+.btn--text[aria-disabled="true"] {
+  background: transparent;
+  text-decoration-thickness: 1px;
 }
 .btn svg {
   width: 16px;
@@ -416,18 +447,18 @@ button {
   font-weight: 600;
   color: var(--ink);
   display: flex;
-  align-items: center;
+  align-items: baseline;
+  justify-content: space-between;
   gap: var(--sp-2);
 }
-.field__dot {
-  width: 6px;
-  height: 6px;
-  border-radius: var(--r-pill);
-  background: var(--blank-line);
-  flex: none;
+/* blank is a word as well as a colour */
+.field__blank {
+  color: var(--status-blank);
+  font-weight: 600;
+  white-space: nowrap;
 }
-.field--done .field__dot {
-  background: var(--oxblood);
+.field--done .field__blank {
+  display: none;
 }
 .field input,
 .field select {
@@ -435,10 +466,11 @@ button {
   font-size: var(--fs-md);
   color: var(--ink);
   min-height: var(--hit);
-  padding: var(--sp-2) var(--sp-3);
-  border: 1px solid var(--surface-border);
-  border-radius: var(--r-sm);
-  background: var(--tint);
+  padding: var(--sp-2) 0;
+  border: 0;
+  border-radius: var(--r-none);
+  background: transparent;
+  box-shadow: inset 0 -1px 0 var(--field-rule);
   width: 100%;
   transition: var(--tr-ui);
 }
@@ -447,15 +479,14 @@ button {
 }
 .field input:hover,
 .field select:hover {
-  border-color: var(--rule-2);
-  background: var(--paper);
+  background: var(--tint);
+  box-shadow: inset 0 -1px 0 var(--gray);
 }
-.field input:focus-visible,
-.field select:focus-visible {
+.field input:focus,
+.field select:focus {
   outline: none;
-  background: var(--paper);
-  border-color: var(--oxblood);
-  box-shadow: var(--focus-ring);
+  background: var(--accent-wash);
+  box-shadow: inset 0 -2px 0 var(--oxblood);
 }
 .field__hint {
   font-size: var(--fs-sm);
@@ -464,14 +495,15 @@ button {
 }
 .field--computed input {
   background: var(--accent-wash);
-  border-style: dashed;
+  padding: var(--sp-2);
+  box-shadow: inset 0 -1px 0 var(--computed-underline);
   color: var(--oxblood);
   font-weight: 600;
 }
 .field.is-flash input,
 .field.is-flash select {
-  box-shadow: var(--focus-ring-strong);
-  border-color: var(--oxblood);
+  background: var(--accent-wash);
+  box-shadow: inset 0 -2px 0 var(--oxblood);
 }
 
 /* --------------------------------------------------------------- document */
@@ -563,6 +595,27 @@ button {
   letter-spacing: 0.06em;
 }
 
+/* paragraph numbers: rendered at the paragraph start, hung in the margin */
+.pnum {
+  position: absolute;
+  top: 0;
+  right: 100%;
+  margin-right: var(--sp-3);
+  font-family: var(--sans);
+  font-size: var(--fs-sm);
+  font-weight: 400;
+  line-height: 1.75;
+  color: var(--gray);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  user-select: none;
+  transition: var(--tr-ui);
+}
+.pnum.is-tracing {
+  color: var(--oxblood);
+  font-weight: 600;
+}
+
 /* selectable sections (body/headings carry mappings) */
 .s--mappable {
   cursor: pointer;
@@ -572,7 +625,7 @@ button {
 .s--mappable::before {
   content: "";
   position: absolute;
-  left: calc(-1 * var(--sp-4));
+  left: calc(-1 * var(--sp-2));
   top: 2px;
   bottom: 2px;
   width: 3px;
@@ -677,36 +730,45 @@ button {
   padding: 0 2px;
   cursor: pointer;
   white-space: nowrap;
+  text-decoration-line: underline;
+  text-decoration-style: solid;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
   transition: var(--tr-ui);
 }
+/* blank: amber wash and a dotted underline */
 .tok--empty {
   background: var(--tok-empty-bg);
   color: var(--status-blank);
-  box-shadow: inset 0 -2px 0 var(--blank-line);
+  text-decoration-style: dotted;
+  text-decoration-thickness: 2px;
+  text-decoration-color: var(--status-blank);
 }
-/* a filled value becomes part of the prose, no decoration at rest */
+/* filled: part of the prose, no wash, a hairline underline */
 .tok--filled {
   color: inherit;
   font-family: var(--serif);
   font-size: inherit;
   background: transparent;
-  box-shadow: none;
   padding: 0;
+  text-decoration-color: var(--filled-underline);
 }
 .tok--computed {
   color: var(--oxblood);
   background: transparent;
   font-weight: 700;
-  box-shadow: inset 0 -2px 0 var(--computed-underline);
+  text-decoration-color: var(--computed-underline);
   padding: 0 1px;
 }
 .tok--empty:hover {
   background: var(--tok-empty-bg-hover);
 }
-.tok--filled:hover,
-.tok--computed:hover {
-  background: var(--accent-wash);
-  box-shadow: inset 0 -2px 0 var(--filled-underline);
+/* hover, focus and press: an oxblood underline */
+.tok:hover,
+.tok:focus-visible,
+.tok:active {
+  text-decoration-color: var(--oxblood);
+  text-decoration-thickness: 2px;
 }
 .tok.is-flash {
   animation: tokflash var(--dur-2) var(--ease-out);
@@ -721,44 +783,44 @@ button {
   }
 }
 
-/* Citations read like quiet footnote references at rest; the color coding
-   (oxblood = case law, green = statute/rule) reveals on hover and on locate. */
+/* Citation chips: oxblood ink in the chrome face; statute and rule chips take
+   the statute ink (their kind is also in the title and the Authorities group).
+   Underline on hover; a solid accent-wash fill when active. */
 .cite {
   font-family: var(--sans);
   font-size: var(--fs-sm);
   font-weight: 600;
-  color: var(--cite-ink);
+  color: var(--oxblood);
   background: transparent;
   border-radius: var(--r-sm);
   padding: 0 2px;
   cursor: pointer;
   white-space: nowrap;
-  box-shadow: inset 0 -1px 0 var(--cite-line);
+  text-decoration-line: none;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
   transition: var(--tr-ui);
 }
-.cite:hover {
-  color: var(--oxblood);
+.cite:hover,
+.cite:focus-visible {
+  text-decoration-line: underline;
+}
+.cite:active,
+.cite.is-flash,
+.s--active .cite {
   background: var(--accent-wash);
-  box-shadow: inset 0 -2px 0 var(--oxblood);
 }
 .cite.is-flash {
-  color: var(--on-accent);
-  background: var(--oxblood);
   box-shadow: var(--flash-ring);
+  text-decoration-line: underline;
 }
-.cite--stat:hover {
+.cite--stat {
   color: var(--status-statute);
+}
+.cite--stat:active,
+.cite--stat.is-flash,
+.s--active .cite--stat {
   background: var(--statute-wash);
-  box-shadow: inset 0 -2px 0 var(--status-statute);
-}
-.cite--stat.is-flash {
-  background: var(--status-statute);
-}
-/* the selected paragraph quietly lights up its own citations
-   (but a citation being located keeps its stronger flash) */
-.s--active .cite:not(.is-flash) {
-  color: var(--oxblood);
-  box-shadow: inset 0 -2px 0 var(--filled-underline);
 }
 
 /* edit mode */
@@ -811,6 +873,9 @@ button {
 }
 .ctx__tab:hover {
   color: var(--ink);
+}
+.ctx__tab:active {
+  transform: scale(0.98);
 }
 .ctx__tab[aria-selected="true"] {
   color: var(--oxblood);
@@ -1049,15 +1114,240 @@ button {
   gap: var(--sp-2);
   flex-wrap: wrap;
 }
-.filterbar .clear {
-  color: var(--oxblood);
-  cursor: pointer;
-  font-weight: 600;
-  border-radius: var(--r-sm);
+
+/* table of authorities (Authorities tab): headings, then rows of
+   name, dot leader and the paragraph numbers that cite it. Square, no cards. */
+.toa__lede {
+  font-size: var(--fs-sm);
+  color: var(--gray);
+  margin: 0;
+}
+.toa__group {
+  font-family: var(--serif);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--ink);
+  margin: var(--sp-5) 0 var(--sp-1);
+  padding-bottom: var(--sp-1);
+  border-bottom: 1px solid var(--rule-2);
+}
+.toa__list,
+.srow__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.toa__row,
+.srow {
+  border-bottom: 1px solid var(--surface-border);
+  border-radius: var(--r-none);
   transition: var(--tr-ui);
 }
-.filterbar .clear:hover {
+.toa__row.is-flash,
+.srow.is-active {
   background: var(--accent-wash);
+}
+.toa__main {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  width: 100%;
+  min-height: var(--hit);
+  padding: var(--sp-3) 0;
+  background: transparent;
+  border: 0;
+  border-radius: var(--r-none);
+  font-family: inherit;
+  font-size: var(--fs-md);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  transition: var(--tr-ui);
+}
+.toa__name {
+  font-family: var(--serif);
+  flex: 0 1 auto;
+  min-width: 0;
+}
+.toa__name--case {
+  font-style: italic;
+}
+.toa__name--statute,
+.toa__name--rule {
+  color: var(--status-statute);
+}
+.toa__leader {
+  flex: 1 1 var(--sp-5);
+  min-width: var(--sp-4);
+  height: 0;
+  border-bottom: 2px dotted var(--rule-2);
+  transform-origin: left center;
+  transition: var(--tr-ui);
+}
+.toa__pages {
+  flex: 0 1 auto;
+  max-width: 50%;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  transition: var(--tr-ui);
+}
+.toa__row.is-tracing .toa__leader {
+  border-bottom-color: var(--oxblood);
+}
+.toa__row.is-tracing .toa__pages {
+  color: var(--oxblood);
+}
+.toa__detail {
+  padding: 0 0 var(--sp-3);
+}
+.toa__detail .auth__badge {
+  display: inline-block;
+}
+.toa__detail .auth__prop,
+.toa__detail .auth__full {
+  max-width: 64ch;
+}
+
+/* source rows (Sources tab): title, kind and an Open control */
+.srow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  column-gap: var(--sp-2);
+}
+.srow__main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-height: var(--hit);
+  padding: var(--sp-3) 0;
+  background: transparent;
+  border: 0;
+  border-radius: var(--r-none);
+  font-family: inherit;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  transition: var(--tr-ui);
+}
+.srow__title {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+.srow__title svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  color: var(--oxblood);
+}
+.srow__kind {
+  font-size: var(--fs-sm);
+  color: var(--gray);
+}
+.srow__blurb {
+  font-size: var(--fs-md);
+  color: var(--gray);
+  line-height: 1.5;
+  max-width: 64ch;
+}
+.srow__open {
+  margin-top: var(--sp-2);
+}
+
+/* panel states: empty and error say what happened and offer one action;
+   loading is a skeleton in the panel's final shape */
+.state {
+  padding: var(--sp-4) 0;
+  border-radius: var(--r-none);
+}
+.state h4 {
+  margin: 0 0 var(--sp-1);
+  font-size: var(--fs-md);
+  font-weight: 700;
+}
+.state p {
+  margin: 0 0 var(--sp-3);
+  line-height: 1.5;
+}
+.state--empty {
+  color: var(--gray);
+}
+.state--empty h4 {
+  color: var(--ink);
+}
+.state--error {
+  padding: var(--sp-4);
+  background: var(--error-wash);
+  color: var(--status-error);
+}
+.skel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+.skel__row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.skel__bar {
+  display: block;
+  height: var(--sp-3);
+  background: var(--skel);
+  border-radius: var(--r-none);
+}
+.skel__row .skel__bar {
+  height: var(--sp-4);
+}
+.skel__bar--head {
+  width: 40%;
+  height: var(--sp-4);
+}
+.skel__bar--name {
+  width: 50%;
+}
+.skel__bar--lead {
+  flex: 1;
+}
+.skel__bar--num {
+  width: 16%;
+}
+.skel__bar--title {
+  width: 60%;
+}
+.skel__bar--btn {
+  width: var(--sp-7);
+}
+.skel__row--src {
+  justify-content: space-between;
+}
+.skel__bar--meta {
+  width: 35%;
+}
+.skel__bar--line {
+  width: 100%;
+}
+.skel__bar--short {
+  width: 60%;
+}
+.skel__bar--block {
+  width: 100%;
+  height: var(--sp-8);
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
 }
 
 /* -------------------------------------------------------------- ref drawer */
@@ -1200,13 +1490,13 @@ button {
   left: 50%;
   max-width: calc(100vw - 2 * var(--sp-4));
   transform: translateX(-50%) translateY(var(--sp-3));
-  background: var(--ink);
-  color: var(--on-accent);
+  background: var(--paper);
+  color: var(--ink);
   font-size: var(--fs-md);
   font-weight: 600;
   padding: var(--sp-3) var(--sp-4);
-  border-radius: var(--r-sm);
-  box-shadow: var(--elev-3);
+  border-radius: var(--r-none);
+  box-shadow: var(--elev-3), var(--elev-1);
   opacity: 0;
   pointer-events: none;
   transition:
@@ -1273,7 +1563,8 @@ button {
 .auth__links a:focus-visible,
 .auth__links button:focus-visible,
 .src__open:focus-visible,
-.filterbar .clear:focus-visible,
+.toa__main:focus-visible,
+.srow__main:focus-visible,
 .md a:focus-visible {
   outline-offset: 1px;
 }
@@ -1353,6 +1644,7 @@ button {
   .scrim,
   .drawer,
   .toast,
+  .pnum,
   .mobilenote,
   .part-rule,
   body.show-rail-mobile .rail {
@@ -1387,6 +1679,9 @@ button {
     box-shadow: none;
     opacity: 1;
   }
+  .paper .tok {
+    text-decoration: none;
+  }
   .paper .tok--empty {
     background: var(--print-paper);
     color: var(--print-ink);
@@ -1414,6 +1709,7 @@ button {
     font-weight: 400;
     padding: 0;
     font-size: inherit;
+    text-decoration: none;
   }
   .cite::after {
     content: "";

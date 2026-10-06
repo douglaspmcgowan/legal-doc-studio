@@ -97,6 +97,9 @@ declare global {
       ) => void;
       selectSection: (id: string) => void;
       locateCitation: (id: string, scroll?: boolean) => void;
+      paragraphsCiting: (id: string) => number[];
+      openRef: (id: string) => void;
+      setLoading: (tab: "context" | "authorities" | "sources") => void;
     };
   }
 }
