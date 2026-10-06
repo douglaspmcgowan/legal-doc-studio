@@ -48,17 +48,9 @@ async function cssBody(request: APIRequestContext) {
     .replace(/\/\*[\s\S]*?\*\//g, "");
 }
 
-test("no !important survives outside the reduced-motion and print blocks", async ({
-  request,
-}) => {
+test("no !important appears anywhere in styles.css", async ({ request }) => {
   const css = await (await request.get("/styles.css")).text();
-  // Those two at-rules are where !important is the correct construct: overriding
-  // author transitions for prefers-reduced-motion, and forcing print visibility.
-  const stripped = css.replace(
-    /@media\s*(?:\(prefers-reduced-motion:\s*reduce\)|print)\s*\{[\s\S]*?\n\}/g,
-    "",
-  );
-  expect(stripped.match(/!important/g) || []).toEqual([]);
+  expect(css.match(/!important/g) || []).toEqual([]);
 });
 
 test("no colour, font-size or radius literal survives outside :root", async ({
@@ -90,7 +82,7 @@ test("a thick coloured border-left never lands on a card or callout", async ({
   });
   // The party caption's vertical rule is a facsimile of a real court caption
   // block, not a decorative accent, and it is the only one allowed.
-  expect(offenders).toEqual(["border-left: 2px solid var(--caption-rule);"]);
+  expect(offenders).toEqual(["border-left: 2px solid var(--ink);"]);
 });
 
 test("a dark-scheme token block repaints the surface without touching print", async ({

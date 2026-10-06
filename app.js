@@ -249,10 +249,10 @@
         return `<div class="caption">
           <div class="caption__l">
             <div>${renderMarkers(plaintiff)},</div>
-            <div style="padding-left:28px">${esc(plLbl)}</div>
+            <div class="caption__ind">${esc(plLbl)}</div>
             <div>${esc(v)}</div>
             <div>${renderMarkers(defendant)},</div>
-            <div style="padding-left:28px">${esc(defLbl)}</div>
+            <div class="caption__ind">${esc(defLbl)}</div>
           </div>
           <div class="caption__v">)<br>)<br>)<br>)<br>)</div>
           <div class="caption__r">
@@ -658,7 +658,7 @@
       (a, b) => order.indexOf(a.kind) - order.indexOf(b.kind),
     );
     body.innerHTML =
-      `<div class="filterbar">${CITES.length} authorities · cases, statutes &amp; rules</div>` +
+      `<div class="filterbar">${CITES.length} authorities: cases, statutes &amp; rules</div>` +
       sorted.map((c) => authCard(c)).join("");
     wireCtxCards();
     if (flashId) {
@@ -675,7 +675,7 @@
   function renderSources() {
     const body = $("#ctxBody");
     const filt = state.sourceFilter
-      ? `<div class="filterbar">Highlighting sections that use <strong>${esc(refMetaById[state.sourceFilter].title)}</strong> · <span class="clear" data-clearsrc>clear</span></div>`
+      ? `<div class="filterbar">Highlighting sections that use <strong>${esc(refMetaById[state.sourceFilter].title)}</strong> <span class="clear" data-clearsrc>Clear</span></div>`
       : `<div class="filterbar">Four research memos underpin this motion.</div>`;
     body.innerHTML = filt + REF_META.map((r) => srcCard(r)).join("");
     $$("#ctxBody .src").forEach((el) => {
