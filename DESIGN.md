@@ -137,31 +137,65 @@ than silently accepted.
 ## Tokens
 
 `styles.css` opens with one `:root` block holding every colour, type size,
-radius, elevation and z-layer the product uses — 82 properties, referenced 273
-times. No hex, `rgb()`, `font-size` or `border-radius` literal exists anywhere
-outside it; `tests/smoke.spec.ts` fails the build if one appears.
+space, radius, elevation, duration and z-layer the product uses. No hex,
+`rgb()`, `font-size`, `border-radius` or spacing literal exists outside it;
+`tests/smoke.spec.ts` and `tests/design-floor.spec.ts` fail the build if one
+appears.
 
-Token groups: brand, neutrals, surfaces, functional status (the amber "still
-blank" state), citations, authority weight, selection and search, focus and
-flash rings, type, type scale, shape, elevation, print, and the z-scale.
+- **Colour:** nine base literals in light mode (`--cobalt`, `--cobalt-deep`,
+  `--ink`, `--cream`, `--paper`, `--line`, `--muted`, `--amber`, `--statute`).
+  Every wash, tint, underline, ring, scrim and shadow is a `color-mix()` of
+  those, so it has no literal of its own. Status (`--amber` for a blank field,
+  `--statute` for a statute or rule citation) is kept apart from the accent.
+- **Type:** five screen sizes on one ladder: 12, 14, 16, 20 and 24px
+  (`--fs-sm` to `--fs-2xl`), plus `--fs-print` 12pt. The default screen
+  renders 12, 14 and 16 only. Weights are 400, 600 and 700.
+- **Space:** `--sp-1` to `--sp-8` = 4, 8, 12, 16, 24, 32, 48, 64. The paper and
+  stage gutters use `clamp()` over that scale.
+- **Radius:** `--r-sm` 4px (chips, tokens), `--r-md` 8px (controls, inputs),
+  `--r-lg` 12px (paper, cards, drawer), `--r-pill` (meter, segmented track).
+- **Elevation:** `--elev-1` resting control, `--elev-2` the sheet and cards,
+  `--elev-3` overlays. Every surface declares one of them or a border, never both.
+- **Motion:** `--dur-1` 150ms (hover, focus, press), `--dur-2` 300ms (drawer,
+  flash, meter), on `--ease-out`. Under reduced motion both durations collapse.
+- **Touch:** `--hit` 44px is the minimum for every button, input and tab.
 
-A second `:root` inside `@media (prefers-color-scheme: dark)` redefines 42 of
-them. The print tokens (`--print-paper`, `--print-ink`) are deliberately not
-among them: paper is paper.
+A second `:root` inside `@media (prefers-color-scheme: dark)` redefines the
+same nine names; derived tokens recompute. The print tokens (`--print-paper`,
+`--print-ink`) are deliberately not among them: paper is paper.
+
+## Formats
+
+- Dates: long US legal form, `April 1, 2026`.
+- Numbers: digits with comma thousands; counts read `3 / 18 fields`.
+- Units: spelled out after the number, `75 days`; statutes take `§` with a
+  non-breaking space, `42 Pa.C.S. § 5524`.
+- Inline separators: comma, semicolon or a line break. Never a middle dot.
 
 ## Decisions
 
-- **Elevation is not yet declared once per surface.** `.paper`, `.auth` and
-  `.src` each carry a 1px border *and* a shadow, which the universal rules call
-  the ghost card. Correcting it changes what the app looks like, so it is a
-  recommendation rather than a change; see `LOG.md`, 2026-09-27.
+- **Elevation is declared once per surface** (2026-10-06). `.paper`, `.auth`
+  and `.src` keep their soft shadow and lost their 1px border; hover and flash
+  use a ring.
 - **The 3px accent bar beside a selected paragraph stays.** It is an absolutely
   positioned `::before`, not a `border-left`, and it is the app's only indicator
   of which paragraph the Context panel is describing. Removing it would remove
   the affordance, not the decoration.
 - **The party caption's 2px vertical rule stays.** It is a facsimile of a real
   court caption block. `tests/smoke.spec.ts` allows exactly that one rule and
-  rejects every other coloured `border-left` of 2px or more.
+  rejects every other coloured `border-left` of 2px or more. Below 600px the
+  caption columns stack.
 - **The completion meter scales on X rather than animating width**, because the
   universal rules permit animating only `transform` and `opacity`. The track
   clips to a pill, so the painted result is the same.
+- **Court headings inside the document stay in capitals.** They are the text of
+  the filing rather than interface labels; the all-caps rule governs chrome.
+
+## Remaining exceptions
+
+- **Inter Tight as the chrome face.** It sits next to the banned default, but it
+  is the shipped identity, so this compliance pass keeps it. The design-system
+  pull request replaces it.
+- **No heading is twice the body size.** The workbench has no page heading
+  (the filing's own hierarchy is set at body size, as a court requires). The
+  design-system pull request adds a display-size document title.
