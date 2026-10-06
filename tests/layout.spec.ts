@@ -271,3 +271,25 @@ test("changing a field flashes its document tokens with an opacity-only wash", a
   });
   expect(["tokflash", "none"]).toContain(anim);
 });
+
+for (const width of [375, 768]) {
+  test(`topbar stays within two rows at ${width}`, async ({ page }) => {
+    await ready(page, width);
+    const h = await page.locator(".topbar").evaluate((n) => n.getBoundingClientRect().height);
+    expect(h).toBeLessThanOrEqual(112);
+    const scrolls = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth);
+    expect(scrolls).toBe(false);
+    const btns = page.locator(".topbar button");
+    const n = await btns.count();
+    expect(n).toBeGreaterThanOrEqual(6);
+    for (let i = 0; i < n; i++) {
+      const info = await btns.nth(i).evaluate((b) => {
+        const r = b.getBoundingClientRect();
+        return { w: r.width, h: r.height, name: (b.getAttribute("aria-label") || b.textContent || "").trim() };
+      });
+      expect(info.name.length).toBeGreaterThan(0);
+      expect(info.w).toBeGreaterThanOrEqual(43.5);
+      expect(info.h).toBeGreaterThanOrEqual(43.5);
+    }
+  });
+}

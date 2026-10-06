@@ -75,7 +75,6 @@
   --sp-6: 32px;
   --sp-7: 48px;
   --sp-8: 64px;
-  --sp-paper-x: clamp(var(--sp-4), 6vw, var(--sp-8));
   --sp-paper-r: clamp(var(--sp-4), 4vw, var(--sp-6)); /* sheet right margin */
   --sp-stage-x: clamp(var(--sp-3), 3vw, var(--sp-5));
   --sp-page: 1in; /* printed page margin */
@@ -1604,6 +1603,15 @@ button {
     display: flex;
     flex-wrap: wrap;
   }
+  /* two rows: brand, drawers, print; then the mode control and the meter */
+  .brand { order: 1; }
+  .topbar__drawers { order: 2; }
+  .topbar__spacer { order: 3; }
+  #btnPrint { order: 4; }
+  .segmented { order: 5; padding: 0; }
+  .topbar { padding-block: var(--sp-1); }
+  .progress { order: 6; flex: 1 1 auto; min-width: calc(var(--sp-8) * 2); }
+  .progress__track { flex: 1 1 auto; width: auto; min-width: var(--sp-5); max-width: 96px; }
   .iconbtn.drawer-close {
     display: inline-grid;
   }
@@ -1653,7 +1661,41 @@ button {
     display: none;
   }
 }
+@media (max-width: 420px) {
+  .brand__name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+}
 @media (max-width: 600px) {
+  .topbar {
+    column-gap: var(--sp-2);
+  }
+  /* Fields, Authorities and Print collapse to 44x44 icon buttons; the label
+     stays in the DOM as the accessible name */
+  .topbar .btn__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+  .topbar .btn {
+    padding: 0;
+  }
+  .progress {
+    min-width: 0;
+  }
+  .segmented button {
+    padding-inline: var(--sp-3);
+  }
   .rail,
   .ctx {
     width: 100%;
