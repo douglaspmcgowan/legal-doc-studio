@@ -2,18 +2,34 @@
 (() => {
   "use strict";
 
+  /**
+   * The document model is declared once in types/studio.d.ts, on `Window`.
+   * These aliases give the same shapes a local name so the annotations below
+   * read as prose rather than as indexed lookups.
+   *
+   * @typedef {Window["STUDIO_FIELDS"][number]} Field
+   * @typedef {Window["STUDIO_CITATIONS"][number]} Cite
+   * @typedef {Window["STUDIO_REF_META"][number]} RefMeta
+   * @typedef {Window["STUDIO_DOC"][number]} Section
+   */
+
   const FIELDS = window.STUDIO_FIELDS;
   const CITES = window.STUDIO_CITATIONS;
   const DOC = window.STUDIO_DOC;
   const REF_META = window.STUDIO_REF_META;
   const REFS = window.STUDIO_REFS || {};
 
+  /** @type {Record<string, Field>} */
   const fieldById = Object.fromEntries(FIELDS.map((f) => [f.id, f]));
+  /** @type {Record<string, Cite>} */
   const citeById = Object.fromEntries(CITES.map((c) => [c.id, c]));
+  /** @type {Record<string, RefMeta>} */
   const refMetaById = Object.fromEntries(REF_META.map((r) => [r.id, r]));
 
   // reverse maps: which sections use a citation / a source
+  /** @type {Record<string, string[]>} */
   const citeUses = {};
+  /** @type {Record<string, string[]>} */
   const srcUses = {};
   for (const s of DOC) {
     (s.citations || []).forEach((c) =>
@@ -25,6 +41,16 @@
   }
 
   const STORE_KEY = "recital.v1";
+  /**
+   * @type {{
+   *   values: Record<string, string>,
+   *   edits: Record<string, string>,
+   *   mode: "fill" | "edit" | "read",
+   *   tab: "context" | "authorities" | "sources",
+   *   selected: string | null,
+   *   sourceFilter: string | null,
+   * }}
+   */
   const state = {
     values: Object.fromEntries(FIELDS.map((f) => [f.id, f.value || ""])),
     edits: {},
@@ -44,6 +70,7 @@
       /* ignore */
     }
   }
+  /** @type {ReturnType<typeof setTimeout> | undefined} */
   let saveT;
   function save() {
     clearTimeout(saveT);
@@ -58,17 +85,38 @@
   }
 
   /* ------------------------------------------------------------- utilities */
+  /**
+   * Every selector these two are called with names an element index.html ships,
+   * so the return is deliberately loose rather than null-checked at sixty call
+   * sites. Keep it that way: a selector that can miss gets its own guard.
+   *
+   * @type {(sel: string, el?: ParentNode) => any}
+   */
   const $ = (sel, el = document) => el.querySelector(sel);
+  /** @type {(sel: string, el?: ParentNode) => any[]} */
   const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
+  /** @type {(s: unknown) => string} */
   const esc = (s) =>
     String(s).replace(
       /[&<>]/g,
-      (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c],
+      (c) =>
+        /** @type {Record<string, string>} */ ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+        })[c],
     );
+  /** @type {(s: unknown) => string} */
   const escAttr = (s) =>
     String(s).replace(
       /[&<>"]/g,
-      (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c],
+      (c) =>
+        /** @type {Record<string, string>} */ ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+        })[c],
     );
 
   const MONTHS = [
@@ -85,18 +133,21 @@
     "November",
     "December",
   ];
+  /** @param {string | null | undefined} v @returns {Date | null} */
   function parseISO(v) {
     if (!v || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return null;
     const [y, m, d] = v.split("-").map(Number);
     const dt = new Date(y, m - 1, d);
-    return isNaN(dt) ? null : dt;
+    return isNaN(dt.getTime()) ? null : dt;
   }
+  /** @param {string | null | undefined} v */
   function fmtDate(v) {
     const dt = parseISO(v);
     return dt
       ? `${MONTHS[dt.getMonth()]} ${dt.getDate()}, ${dt.getFullYear()}`
       : "";
   }
+  /** @param {string | null | undefined} v @param {number} n */
   function addYears(v, n) {
     const dt = parseISO(v);
     if (!dt) return null;
@@ -104,12 +155,14 @@
     r.setFullYear(r.getFullYear() + n);
     return r;
   }
+  /** @param {string | null | undefined} aISO @param {Date | null} bDate */
   function diffDays(aISO, bDate) {
     const a = parseISO(aISO);
     if (!a || !bDate) return null;
-    return Math.round((a - bDate) / 86400000);
+    return Math.round((a.getTime() - bDate.getTime()) / 86400000);
   }
 
+  /** @param {string} id */
   function computeField(id) {
     if (id === "SOL_DEADLINE") {
       const d = addYears(state.values.INCIDENT_DATE, 2);
@@ -126,6 +179,7 @@
     return "";
   }
 
+  /** @param {Field} f */
   function shortLabel(f) {
     return f.label
       .replace(/\s*\(.*?\)\s*/g, "")
@@ -133,6 +187,7 @@
       .trim();
   }
 
+  /** @param {Field} f */
   function tokenView(f) {
     if (f.type === "computed") {
       const v = computeField(f.id);
@@ -145,22 +200,25 @@
   }
 
   /* --------------------------------------------------------- marker render */
+  /** @param {string} id */
   function fieldTokenHTML(id) {
     const f = fieldById[id];
     if (!f) return esc("{{" + id + "}}");
     const v = tokenView(f);
     return `<span class="tok ${v.cls}" data-field="${id}" role="button" tabindex="0" title="${escAttr(f.label)}">${esc(v.text)}</span>`;
   }
+  /** @param {string} id */
   function citeChipHTML(id) {
     const c = citeById[id];
     if (!c) return esc("[[" + id + "]]");
     const stat = c.kind !== "case" ? " cite--stat" : "";
     return `<span class="cite${stat}" data-cite="${id}" role="button" tabindex="0" title="${escAttr(c.full)}">${esc(c.short)}</span>`;
   }
+  /** @param {string} text */
   function renderMarkers(text) {
     let out = "",
       last = 0,
-      m;
+      /** @type {RegExpExecArray | null} */ m;
     const re = /\{\{(\w+)\}\}|\[\[(\w+)\]\]/g;
     while ((m = re.exec(text))) {
       out += esc(text.slice(last, m.index));
@@ -172,6 +230,7 @@
   }
 
   /* ------------------------------------------------------------ build doc */
+  /** @type {(s: Section) => boolean} */
   const isMappable = (s) =>
     !!(
       s.derivation ||
@@ -179,6 +238,7 @@
       (s.references && s.references.length)
     );
 
+  /** @param {Section} s */
   function sectionInnerHTML(s) {
     switch (s.kind) {
       case "court":
@@ -189,10 +249,10 @@
         return `<div class="caption">
           <div class="caption__l">
             <div>${renderMarkers(plaintiff)},</div>
-            <div style="padding-left:28px">${esc(plLbl)}</div>
+            <div class="caption__ind">${esc(plLbl)}</div>
             <div>${esc(v)}</div>
             <div>${renderMarkers(defendant)},</div>
-            <div style="padding-left:28px">${esc(defLbl)}</div>
+            <div class="caption__ind">${esc(defLbl)}</div>
           </div>
           <div class="caption__v">)<br>)<br>)<br>)<br>)</div>
           <div class="caption__r">
@@ -285,7 +345,8 @@
     const pct = fillable.length
       ? Math.round((done / fillable.length) * 100)
       : 0;
-    $("#progFill").style.width = pct + "%";
+    $("#progFill").style.transform = `scaleX(${pct / 100})`;
+    $("#progress").setAttribute("aria-valuenow", String(pct));
     $("#progTxt").textContent = `${done} / ${fillable.length} fields`;
     // form dots
     $$("#form .field").forEach((el) => {
@@ -304,6 +365,7 @@
   /* ------------------------------------------------------------ build form */
   function buildForm() {
     const form = $("#form");
+    /** @type {{ name: string, items: Field[] }[]} */
     const groups = [];
     for (const f of FIELDS) {
       let g = groups.find((x) => x.name === f.group);
@@ -327,6 +389,7 @@
     updateProgress();
   }
 
+  /** @param {Field} f */
   function fieldHTML(f) {
     const val =
       f.type === "computed"
@@ -339,7 +402,7 @@
       control = `<input data-cfield="${f.id}" value="${escAttr(val)}" readonly tabindex="-1" aria-readonly="true">`;
     } else if (f.type === "select") {
       const listId = `dl-${f.id}`;
-      const opts = f.options
+      const opts = (f.options || [])
         .map((o) => `<option value="${escAttr(o)}"></option>`)
         .join("");
       control = `<input list="${listId}" data-field="${f.id}" value="${escAttr(val)}" placeholder="Type or choose…" autocomplete="off">
@@ -372,20 +435,31 @@
   function wireDoc() {
     // section selection
     $$("#paper .s--mappable").forEach((sec) => {
-      sec.addEventListener("click", (e) => {
-        if (e.target.closest(".tok") || e.target.closest(".cite")) return;
+      sec.setAttribute("tabindex", "0");
+      sec.addEventListener("click", (/** @type {MouseEvent} */ e) => {
+        const t = /** @type {Element} */ (e.target);
+        if (t.closest(".tok") || t.closest(".cite")) return;
         if (state.mode === "edit") return;
         selectSection(sec.dataset.sec);
+      });
+      sec.addEventListener("keydown", (/** @type {KeyboardEvent} */ e) => {
+        if (e.target !== sec) return;
+        if (state.mode === "edit") return;
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          selectSection(sec.dataset.sec);
+        }
       });
     });
     // tokens -> focus matching field
     $$("#paper .tok").forEach((el) => {
+      /** @param {Event} e */
       const act = (e) => {
         e.stopPropagation();
         focusField(el.dataset.field);
       };
       el.addEventListener("click", act);
-      el.addEventListener("keydown", (e) => {
+      el.addEventListener("keydown", (/** @type {KeyboardEvent} */ e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           act(e);
@@ -394,12 +468,13 @@
     });
     // citations -> locate
     $$("#paper .cite").forEach((el) => {
+      /** @param {Event} e */
       const act = (e) => {
         e.stopPropagation();
         locateCitation(el.dataset.cite, true);
       };
       el.addEventListener("click", act);
-      el.addEventListener("keydown", (e) => {
+      el.addEventListener("keydown", (/** @type {KeyboardEvent} */ e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           act(e);
@@ -420,6 +495,7 @@
     }
   }
 
+  /** @param {string} id */
   function focusField(id) {
     state.mode === "read" && setMode("fill");
     const field = $(`#form .field[data-field="${id}"]`);
@@ -433,6 +509,7 @@
     flashTokens(id);
   }
 
+  /** @param {string} id */
   function flashTokens(id) {
     $$(`#paper .tok[data-field="${id}"]`).forEach((t) => {
       t.classList.remove("is-flash");
@@ -443,6 +520,7 @@
   }
 
   /* ---------------------------------------------------------- section map */
+  /** @param {string} id */
   function selectSection(id) {
     state.selected = id;
     state.sourceFilter = null;
@@ -482,7 +560,10 @@
       </div>`;
       return;
     }
-    const s = DOC.find((x) => x.id === state.selected);
+    // state.selected is only ever set from a data-sec attribute this run wrote,
+    // so the section is present; the cast records that rather than adding a
+    // branch no input can reach.
+    const s = /** @type {Section} */ (DOC.find((x) => x.id === state.selected));
     let html = "";
     if (s.derivation) {
       html += `<p class="ctx-sec-label">Why this section exists</p>
@@ -509,11 +590,13 @@
     wireCtxCards();
   }
 
+  /** @param {string} weight */
   function badgeClass(weight) {
     if (/binding/i.test(weight)) return "badge--binding";
     if (/controlling/i.test(weight)) return "badge--controlling";
     return "badge--persuasive";
   }
+  /** @param {Cite | undefined} c */
   function authCard(c) {
     if (!c) return "";
     const uses = (citeUses[c.id] || []).length;
@@ -532,13 +615,14 @@
       </div>
     </div>`;
   }
+  /** @param {RefMeta | undefined} r */
   function srcCard(r) {
     if (!r) return "";
     const uses = (srcUses[r.id] || []).length;
     return `<div class="src" data-src="${r.id}">
       <div class="src__t">${docIcon()} ${esc(r.title)}</div>
       <div class="src__b">${esc(r.blurb)}</div>
-      <div class="src__open">Read full document → <span class="auth__uses" style="margin-left:6px">used by ${uses} section${uses === 1 ? "" : "s"}</span></div>
+      <button class="src__open" type="button">Read full document → <span class="auth__uses">used by ${uses} section${uses === 1 ? "" : "s"}</span></button>
     </div>`;
   }
   const docIcon = () =>
@@ -546,13 +630,13 @@
 
   function wireCtxCards() {
     $$("#ctxBody [data-locate]").forEach((b) =>
-      b.addEventListener("click", (e) => {
+      b.addEventListener("click", (/** @type {Event} */ e) => {
         e.stopPropagation();
         locateCitation(b.dataset.locate, true);
       }),
     );
     $$("#ctxBody [data-readsrc]").forEach((b) =>
-      b.addEventListener("click", (e) => {
+      b.addEventListener("click", (/** @type {Event} */ e) => {
         e.stopPropagation();
         openRef(b.dataset.readsrc);
       }),
@@ -566,6 +650,7 @@
   }
 
   /* -------------------------------------------------------- authorities tab */
+  /** @param {string} [flashId] */
   function renderAuthorities(flashId) {
     const body = $("#ctxBody");
     const order = ["case", "statute", "rule"];
@@ -573,7 +658,7 @@
       (a, b) => order.indexOf(a.kind) - order.indexOf(b.kind),
     );
     body.innerHTML =
-      `<div class="filterbar">${CITES.length} authorities · cases, statutes &amp; rules</div>` +
+      `<div class="filterbar">${CITES.length} authorities: cases, statutes &amp; rules</div>` +
       sorted.map((c) => authCard(c)).join("");
     wireCtxCards();
     if (flashId) {
@@ -590,16 +675,16 @@
   function renderSources() {
     const body = $("#ctxBody");
     const filt = state.sourceFilter
-      ? `<div class="filterbar">Highlighting sections that use <strong>${esc(refMetaById[state.sourceFilter].title)}</strong> · <span class="clear" data-clearsrc>clear</span></div>`
+      ? `<div class="filterbar">Highlighting sections that use <strong>${esc(refMetaById[state.sourceFilter].title)}</strong> <span class="clear" data-clearsrc>Clear</span></div>`
       : `<div class="filterbar">Four research memos underpin this motion.</div>`;
     body.innerHTML = filt + REF_META.map((r) => srcCard(r)).join("");
     $$("#ctxBody .src").forEach((el) => {
-      el.addEventListener("click", (e) => {
+      el.addEventListener("click", (/** @type {MouseEvent} */ e) => {
         if (e.detail === 2) return;
-        // single click highlights; the explicit link reads
+        // single click highlights; the explicit button reads
         toggleSourceFilter(el.dataset.src);
       });
-      $(".src__open", el).addEventListener("click", (e) => {
+      $(".src__open", el).addEventListener("click", (/** @type {Event} */ e) => {
         e.stopPropagation();
         openRef(el.dataset.src);
       });
@@ -613,6 +698,7 @@
       });
   }
 
+  /** @param {string} id */
   function toggleSourceFilter(id) {
     state.sourceFilter = state.sourceFilter === id ? null : id;
     state.selected = null;
@@ -629,6 +715,7 @@
   }
 
   /* --------------------------------------------------------------- locate */
+  /** @param {string} id @param {boolean} [scroll] */
   function locateCitation(id, scroll) {
     setTab("authorities", id);
     const hits = $$(`#paper .cite[data-cite="${id}"]`);
@@ -647,16 +734,19 @@
   }
 
   /* ------------------------------------------------------------- tabs/mode */
+  /** @param {"context" | "authorities" | "sources"} tab @param {string} [flashId] */
   function setTab(tab, flashId) {
     state.tab = tab;
     $$(".ctx__tab").forEach((t) =>
       t.setAttribute("aria-selected", String(t.dataset.tab === tab)),
     );
+    $("#ctxBody").setAttribute("aria-labelledby", `ctxTab-${tab}`);
     if (tab === "context") renderContext();
     else if (tab === "authorities") renderAuthorities(flashId);
     else renderSources();
   }
 
+  /** @param {"fill" | "edit" | "read"} mode */
   function setMode(mode) {
     state.mode = mode;
     $$(".segmented button").forEach((b) =>
@@ -673,6 +763,7 @@
   }
 
   /* ----------------------------------------------------------- ref drawer */
+  /** @param {string} id */
   function openRef(id) {
     const meta = refMetaById[id];
     const md = REFS[id];
@@ -691,6 +782,7 @@
   }
 
   /* --------------------------------------------------- markdown (compact) */
+  /** @param {string} s */
   function mdInline(s) {
     s = esc(s);
     s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
@@ -702,10 +794,12 @@
     s = s.replace(/(^|[^*])\*([^*\s][^*]*)\*/g, "$1<em>$2</em>");
     return s;
   }
+  /** @param {string} md */
   function renderMarkdown(md) {
     const lines = md.replace(/\r/g, "").split("\n");
     let html = "",
       i = 0;
+    /** @type {(l: string) => string[]} */
     const splitRow = (l) =>
       l
         .replace(/^\||\|$/g, "")
@@ -791,7 +885,9 @@
   }
 
   /* --------------------------------------------------------------- toast */
+  /** @type {ReturnType<typeof setTimeout> | undefined} */
   let toastT;
+  /** @param {string} msg */
   function toast(msg) {
     const t = $("#toast");
     t.textContent = msg;
@@ -821,6 +917,7 @@
     ATTORNEY_EMAIL: "jlee@leeassociates.com",
     BAR_NO: "312045",
   };
+  /** @param {Record<string, string>} map */
   function applyValues(map) {
     FIELDS.forEach((f) => {
       if (f.type !== "computed") state.values[f.id] = map[f.id] || "";
@@ -855,8 +952,9 @@
     });
     $("#drawerClose").addEventListener("click", closeRef);
     $("#scrim").addEventListener("click", closeRef);
-    $("#stage").addEventListener("click", (e) => {
-      if (e.target.id === "stage" || e.target.id === "paper") {
+    $("#stage").addEventListener("click", (/** @type {Event} */ e) => {
+      const t = /** @type {Element} */ (e.target);
+      if (t.id === "stage" || t.id === "paper") {
         state.selected = null;
         applySelection();
         if (state.tab === "context") renderContext();

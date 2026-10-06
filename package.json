@@ -1,0 +1,23 @@
+{
+  "name": "recital-legal-doc-studio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Interactive viewer, editor, and citation map for a legal document (Motion to Dismiss, E.D. Pa.).",
+  "license": "UNLICENSED",
+  "type": "module",
+  "engines": {
+    "node": "24.x"
+  },
+  "scripts": {
+    "start": "python -m http.server 8911",
+    "build": "node build-refs.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
+    "@playwright/test": "1.63.0",
+    "@types/node": "24.10.1",
+    "typescript": "5.9.3"
+  }
+}

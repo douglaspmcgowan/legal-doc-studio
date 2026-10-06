@@ -528,7 +528,7 @@ window.STUDIO_DOC = [
     id: "m-sig",
     kind: "signature",
     part: "Motion",
-    html: `Respectfully submitted,|{{ATTORNEY_NAME}}|{{FIRM_NAME}}|{{FIRM_ADDRESS}}|{{ATTORNEY_PHONE}} · {{ATTORNEY_EMAIL}}|Pennsylvania Bar No. {{BAR_NO}}|Attorney for Defendant {{DEFENDANT_NAME}}|Dated: {{SIGN_DATE}}`,
+    html: `Respectfully submitted,|{{ATTORNEY_NAME}}|{{FIRM_NAME}}|{{FIRM_ADDRESS}}|{{ATTORNEY_PHONE}}|{{ATTORNEY_EMAIL}}|Pennsylvania Bar No. {{BAR_NO}}|Attorney for Defendant {{DEFENDANT_NAME}}|Dated: {{SIGN_DATE}}`,
     citations: [],
     references: ["linguistic-patterns"],
     derivation:
@@ -771,7 +771,7 @@ window.STUDIO_DOC = [
     id: "mem-sig",
     kind: "signature",
     part: "Memorandum",
-    html: `Respectfully submitted,|{{ATTORNEY_NAME}}|{{FIRM_NAME}}|{{FIRM_ADDRESS}}|{{ATTORNEY_PHONE}} · {{ATTORNEY_EMAIL}}|Pennsylvania Bar No. {{BAR_NO}}|Attorney for Defendant {{DEFENDANT_NAME}}|Dated: {{SIGN_DATE}}`,
+    html: `Respectfully submitted,|{{ATTORNEY_NAME}}|{{FIRM_NAME}}|{{FIRM_ADDRESS}}|{{ATTORNEY_PHONE}}|{{ATTORNEY_EMAIL}}|Pennsylvania Bar No. {{BAR_NO}}|Attorney for Defendant {{DEFENDANT_NAME}}|Dated: {{SIGN_DATE}}`,
     citations: [],
     references: [],
     derivation: "",
