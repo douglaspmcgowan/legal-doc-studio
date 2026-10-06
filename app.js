@@ -2,18 +2,34 @@
 (() => {
   "use strict";
 
+  /**
+   * The document model is declared once in types/studio.d.ts, on `Window`.
+   * These aliases give the same shapes a local name so the annotations below
+   * read as prose rather than as indexed lookups.
+   *
+   * @typedef {Window["STUDIO_FIELDS"][number]} Field
+   * @typedef {Window["STUDIO_CITATIONS"][number]} Cite
+   * @typedef {Window["STUDIO_REF_META"][number]} RefMeta
+   * @typedef {Window["STUDIO_DOC"][number]} Section
+   */
+
   const FIELDS = window.STUDIO_FIELDS;
   const CITES = window.STUDIO_CITATIONS;
   const DOC = window.STUDIO_DOC;
   const REF_META = window.STUDIO_REF_META;
   const REFS = window.STUDIO_REFS || {};
 
+  /** @type {Record<string, Field>} */
   const fieldById = Object.fromEntries(FIELDS.map((f) => [f.id, f]));
+  /** @type {Record<string, Cite>} */
   const citeById = Object.fromEntries(CITES.map((c) => [c.id, c]));
+  /** @type {Record<string, RefMeta>} */
   const refMetaById = Object.fromEntries(REF_META.map((r) => [r.id, r]));
 
   // reverse maps: which sections use a citation / a source
+  /** @type {Record<string, string[]>} */
   const citeUses = {};
+  /** @type {Record<string, string[]>} */
   const srcUses = {};
   for (const s of DOC) {
     (s.citations || []).forEach((c) =>
@@ -24,7 +40,36 @@
     );
   }
 
+  /**
+   * Paragraph numbers (1..N in document order) of every section that cites an
+   * authority, whether through its `citations` list or an inline [[marker]].
+   * The table of authorities prints these beside each entry.
+   *
+   * @param {string} id
+   * @returns {number[]}
+   */
+  function paragraphsCiting(id) {
+    const marker = `[[${id}]]`;
+    /** @type {number[]} */
+    const out = [];
+    DOC.forEach((s, i) => {
+      if ((s.citations || []).includes(id) || s.html.includes(marker))
+        out.push(i + 1);
+    });
+    return out;
+  }
+
   const STORE_KEY = "recital.v1";
+  /**
+   * @type {{
+   *   values: Record<string, string>,
+   *   edits: Record<string, string>,
+   *   mode: "fill" | "edit" | "read",
+   *   tab: "context" | "authorities" | "sources",
+   *   selected: string | null,
+   *   sourceFilter: string | null,
+   * }}
+   */
   const state = {
     values: Object.fromEntries(FIELDS.map((f) => [f.id, f.value || ""])),
     edits: {},
@@ -44,6 +89,7 @@
       /* ignore */
     }
   }
+  /** @type {ReturnType<typeof setTimeout> | undefined} */
   let saveT;
   function save() {
     clearTimeout(saveT);
@@ -58,17 +104,38 @@
   }
 
   /* ------------------------------------------------------------- utilities */
+  /**
+   * Every selector these two are called with names an element index.html ships,
+   * so the return is deliberately loose rather than null-checked at sixty call
+   * sites. Keep it that way: a selector that can miss gets its own guard.
+   *
+   * @type {(sel: string, el?: ParentNode) => any}
+   */
   const $ = (sel, el = document) => el.querySelector(sel);
+  /** @type {(sel: string, el?: ParentNode) => any[]} */
   const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
+  /** @type {(s: unknown) => string} */
   const esc = (s) =>
     String(s).replace(
       /[&<>]/g,
-      (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c],
+      (c) =>
+        /** @type {Record<string, string>} */ ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+        })[c],
     );
+  /** @type {(s: unknown) => string} */
   const escAttr = (s) =>
     String(s).replace(
       /[&<>"]/g,
-      (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c],
+      (c) =>
+        /** @type {Record<string, string>} */ ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+        })[c],
     );
 
   const MONTHS = [
@@ -85,18 +152,21 @@
     "November",
     "December",
   ];
+  /** @param {string | null | undefined} v @returns {Date | null} */
   function parseISO(v) {
     if (!v || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return null;
     const [y, m, d] = v.split("-").map(Number);
     const dt = new Date(y, m - 1, d);
-    return isNaN(dt) ? null : dt;
+    return isNaN(dt.getTime()) ? null : dt;
   }
+  /** @param {string | null | undefined} v */
   function fmtDate(v) {
     const dt = parseISO(v);
     return dt
       ? `${MONTHS[dt.getMonth()]} ${dt.getDate()}, ${dt.getFullYear()}`
       : "";
   }
+  /** @param {string | null | undefined} v @param {number} n */
   function addYears(v, n) {
     const dt = parseISO(v);
     if (!dt) return null;
@@ -104,12 +174,14 @@
     r.setFullYear(r.getFullYear() + n);
     return r;
   }
+  /** @param {string | null | undefined} aISO @param {Date | null} bDate */
   function diffDays(aISO, bDate) {
     const a = parseISO(aISO);
     if (!a || !bDate) return null;
-    return Math.round((a - bDate) / 86400000);
+    return Math.round((a.getTime() - bDate.getTime()) / 86400000);
   }
 
+  /** @param {string} id */
   function computeField(id) {
     if (id === "SOL_DEADLINE") {
       const d = addYears(state.values.INCIDENT_DATE, 2);
@@ -126,6 +198,7 @@
     return "";
   }
 
+  /** @param {Field} f */
   function shortLabel(f) {
     return f.label
       .replace(/\s*\(.*?\)\s*/g, "")
@@ -133,6 +206,7 @@
       .trim();
   }
 
+  /** @param {Field} f */
   function tokenView(f) {
     if (f.type === "computed") {
       const v = computeField(f.id);
@@ -145,22 +219,26 @@
   }
 
   /* --------------------------------------------------------- marker render */
+  /** @param {string} id */
   function fieldTokenHTML(id) {
     const f = fieldById[id];
     if (!f) return esc("{{" + id + "}}");
     const v = tokenView(f);
     return `<span class="tok ${v.cls}" data-field="${id}" role="button" tabindex="0" title="${escAttr(f.label)}">${esc(v.text)}</span>`;
   }
+  /** @param {string} id */
   function citeChipHTML(id) {
     const c = citeById[id];
     if (!c) return esc("[[" + id + "]]");
     const stat = c.kind !== "case" ? " cite--stat" : "";
-    return `<span class="cite${stat}" data-cite="${id}" role="button" tabindex="0" title="${escAttr(c.full)}">${esc(c.short)}</span>`;
+    const kind = c.kind === "statute" ? "Statute: " : c.kind === "rule" ? "Rule: " : "";
+    return `<span class="cite${stat}" data-cite="${id}" role="button" tabindex="0" title="${escAttr(kind + c.full)}">${esc(c.short)}</span>`;
   }
+  /** @param {string} text */
   function renderMarkers(text) {
     let out = "",
       last = 0,
-      m;
+      /** @type {RegExpExecArray | null} */ m;
     const re = /\{\{(\w+)\}\}|\[\[(\w+)\]\]/g;
     while ((m = re.exec(text))) {
       out += esc(text.slice(last, m.index));
@@ -172,6 +250,7 @@
   }
 
   /* ------------------------------------------------------------ build doc */
+  /** @type {(s: Section) => boolean} */
   const isMappable = (s) =>
     !!(
       s.derivation ||
@@ -179,6 +258,7 @@
       (s.references && s.references.length)
     );
 
+  /** @param {Section} s */
   function sectionInnerHTML(s) {
     switch (s.kind) {
       case "court":
@@ -189,10 +269,10 @@
         return `<div class="caption">
           <div class="caption__l">
             <div>${renderMarkers(plaintiff)},</div>
-            <div style="padding-left:28px">${esc(plLbl)}</div>
+            <div class="caption__ind">${esc(plLbl)}</div>
             <div>${esc(v)}</div>
             <div>${renderMarkers(defendant)},</div>
-            <div style="padding-left:28px">${esc(defLbl)}</div>
+            <div class="caption__ind">${esc(defLbl)}</div>
           </div>
           <div class="caption__v">)<br>)<br>)<br>)<br>)</div>
           <div class="caption__r">
@@ -235,7 +315,9 @@
     const paper = $("#paper");
     let html = "";
     let part = null;
+    let n = 0;
     for (const s of DOC) {
+      n += 1;
       if (s.part && s.part !== part) {
         part = s.part;
         if (part === "Memorandum")
@@ -258,7 +340,7 @@
           /^<(p|div) class="(s-body|s-h1|s-h2|s-h3|s-title)"/,
           '<$1 class="$2" contenteditable="true"',
         );
-      html += `<section class="${cls}" data-sec="${s.id}">${block}</section>`;
+      html += `<section class="${cls}" data-sec="${s.id}"><span class="pnum" data-pn="${n}">${n}</span>${block}</section>`;
     }
     paper.innerHTML = html;
     wireDoc();
@@ -285,7 +367,8 @@
     const pct = fillable.length
       ? Math.round((done / fillable.length) * 100)
       : 0;
-    $("#progFill").style.width = pct + "%";
+    $("#progFill").style.transform = `scaleX(${pct / 100})`;
+    $("#progress").setAttribute("aria-valuenow", String(pct));
     $("#progTxt").textContent = `${done} / ${fillable.length} fields`;
     // form dots
     $$("#form .field").forEach((el) => {
@@ -304,6 +387,7 @@
   /* ------------------------------------------------------------ build form */
   function buildForm() {
     const form = $("#form");
+    /** @type {{ name: string, items: Field[] }[]} */
     const groups = [];
     for (const f of FIELDS) {
       let g = groups.find((x) => x.name === f.group);
@@ -327,6 +411,7 @@
     updateProgress();
   }
 
+  /** @param {Field} f */
   function fieldHTML(f) {
     const val =
       f.type === "computed"
@@ -339,7 +424,7 @@
       control = `<input data-cfield="${f.id}" value="${escAttr(val)}" readonly tabindex="-1" aria-readonly="true">`;
     } else if (f.type === "select") {
       const listId = `dl-${f.id}`;
-      const opts = f.options
+      const opts = (f.options || [])
         .map((o) => `<option value="${escAttr(o)}"></option>`)
         .join("");
       control = `<input list="${listId}" data-field="${f.id}" value="${escAttr(val)}" placeholder="Type or choose…" autocomplete="off">
@@ -350,7 +435,7 @@
     }
     const cls = (f.type === "computed" ? " field--computed" : "") + done;
     return `<div class="field${cls}" data-field="${f.id}">
-      <label for="in-${f.id}">${f.type !== "computed" ? '<span class="field__dot"></span>' : ""}${esc(f.label)}</label>
+      <label for="in-${f.id}"><span class="field__name">${esc(f.label)}</span> ${f.type !== "computed" ? '<span class="field__blank">blank</span>' : ""}</label>
       ${control.replace("<input", `<input id="in-${f.id}"`)}
       ${f.hint ? `<div class="field__hint">${esc(f.hint)}</div>` : ""}
     </div>`;
@@ -372,20 +457,31 @@
   function wireDoc() {
     // section selection
     $$("#paper .s--mappable").forEach((sec) => {
-      sec.addEventListener("click", (e) => {
-        if (e.target.closest(".tok") || e.target.closest(".cite")) return;
+      sec.setAttribute("tabindex", "0");
+      sec.addEventListener("click", (/** @type {MouseEvent} */ e) => {
+        const t = /** @type {Element} */ (e.target);
+        if (t.closest(".tok") || t.closest(".cite")) return;
         if (state.mode === "edit") return;
         selectSection(sec.dataset.sec);
+      });
+      sec.addEventListener("keydown", (/** @type {KeyboardEvent} */ e) => {
+        if (e.target !== sec) return;
+        if (state.mode === "edit") return;
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          selectSection(sec.dataset.sec);
+        }
       });
     });
     // tokens -> focus matching field
     $$("#paper .tok").forEach((el) => {
+      /** @param {Event} e */
       const act = (e) => {
         e.stopPropagation();
         focusField(el.dataset.field);
       };
       el.addEventListener("click", act);
-      el.addEventListener("keydown", (e) => {
+      el.addEventListener("keydown", (/** @type {KeyboardEvent} */ e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           act(e);
@@ -394,12 +490,13 @@
     });
     // citations -> locate
     $$("#paper .cite").forEach((el) => {
+      /** @param {Event} e */
       const act = (e) => {
         e.stopPropagation();
         locateCitation(el.dataset.cite, true);
       };
       el.addEventListener("click", act);
-      el.addEventListener("keydown", (e) => {
+      el.addEventListener("keydown", (/** @type {KeyboardEvent} */ e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           act(e);
@@ -420,6 +517,7 @@
     }
   }
 
+  /** @param {string} id */
   function focusField(id) {
     state.mode === "read" && setMode("fill");
     const field = $(`#form .field[data-field="${id}"]`);
@@ -433,6 +531,7 @@
     flashTokens(id);
   }
 
+  /** @param {string} id */
   function flashTokens(id) {
     $$(`#paper .tok[data-field="${id}"]`).forEach((t) => {
       t.classList.remove("is-flash");
@@ -443,6 +542,7 @@
   }
 
   /* ---------------------------------------------------------- section map */
+  /** @param {string} id */
   function selectSection(id) {
     state.selected = id;
     state.sourceFilter = null;
@@ -474,15 +574,18 @@
         <h4>Trace any part of the document</h4>
         <p>Click a <strong>paragraph or heading</strong> to see the authorities behind it, the research it draws on, and a note on how it was derived.</p>
         <ul>
-          <li>Click a <strong>blue citation</strong> to highlight every place it appears.</li>
-          <li>Open the <strong>Authorities</strong> tab for the full table of cases and statutes.</li>
+          <li>Click an <strong>oxblood citation</strong> to highlight every place it appears.</li>
+          <li>Open <strong>Authorities</strong> for the table of authorities and the paragraphs that cite each one.</li>
           <li>Open <strong>Sources</strong> to read the underlying research memos.</li>
         </ul>
-        <p>Fill the highlighted blanks on the left — each value flows through the whole document at once.</p>
+        <p>Fill the highlighted blanks on the left. Each value flows through the whole document at once.</p>
       </div>`;
       return;
     }
-    const s = DOC.find((x) => x.id === state.selected);
+    // state.selected is only ever set from a data-sec attribute this run wrote,
+    // so the section is present; the cast records that rather than adding a
+    // branch no input can reach.
+    const s = /** @type {Section} */ (DOC.find((x) => x.id === state.selected));
     let html = "";
     if (s.derivation) {
       html += `<p class="ctx-sec-label">Why this section exists</p>
@@ -509,11 +612,13 @@
     wireCtxCards();
   }
 
+  /** @param {string} weight */
   function badgeClass(weight) {
     if (/binding/i.test(weight)) return "badge--binding";
     if (/controlling/i.test(weight)) return "badge--controlling";
     return "badge--persuasive";
   }
+  /** @param {Cite | undefined} c */
   function authCard(c) {
     if (!c) return "";
     const uses = (citeUses[c.id] || []).length;
@@ -532,27 +637,28 @@
       </div>
     </div>`;
   }
+  /** @param {RefMeta | undefined} r */
   function srcCard(r) {
     if (!r) return "";
     const uses = (srcUses[r.id] || []).length;
     return `<div class="src" data-src="${r.id}">
       <div class="src__t">${docIcon()} ${esc(r.title)}</div>
       <div class="src__b">${esc(r.blurb)}</div>
-      <div class="src__open">Read full document → <span class="auth__uses" style="margin-left:6px">used by ${uses} section${uses === 1 ? "" : "s"}</span></div>
+      <button class="src__open" type="button">Read full document → <span class="auth__uses">used by ${uses} section${uses === 1 ? "" : "s"}</span></button>
     </div>`;
   }
   const docIcon = () =>
-    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>`;
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2"/><path d="M9 9l1 0"/><path d="M9 13l6 0"/><path d="M9 17l6 0"/></svg>`;
 
   function wireCtxCards() {
     $$("#ctxBody [data-locate]").forEach((b) =>
-      b.addEventListener("click", (e) => {
+      b.addEventListener("click", (/** @type {Event} */ e) => {
         e.stopPropagation();
         locateCitation(b.dataset.locate, true);
       }),
     );
     $$("#ctxBody [data-readsrc]").forEach((b) =>
-      b.addEventListener("click", (e) => {
+      b.addEventListener("click", (/** @type {Event} */ e) => {
         e.stopPropagation();
         openRef(b.dataset.readsrc);
       }),
@@ -565,41 +671,178 @@
     );
   }
 
+  /* ------------------------------------------------- loading / empty / error */
+  /** @param {"context" | "authorities" | "sources" | "drawer"} kind */
+  function skeletonHTML(kind) {
+    const bar = (/** @type {string} */ w) =>
+      `<span class="skel__bar skel__bar--${w}"></span>`;
+    let inner = "";
+    if (kind === "authorities") {
+      const row = `<div class="skel__row">${bar("name")}${bar("lead")}${bar("num")}</div>`;
+      inner = `${bar("head")}${row.repeat(4)}${bar("head")}${row.repeat(2)}`;
+    } else if (kind === "sources") {
+      const row = `<div class="skel__row skel__row--src">${bar("title")}${bar("btn")}</div>${bar("meta")}`;
+      inner = row.repeat(4);
+    } else if (kind === "drawer") {
+      inner = `${bar("head")}${bar("line")}${bar("line")}${bar("short")}${bar("line")}${bar("line")}${bar("short")}`;
+    } else {
+      inner = `${bar("meta")}${bar("block")}${bar("meta")}${bar("block")}`;
+    }
+    return `<div class="skel" role="status"><span class="sr-only">Loading</span>${inner}</div>`;
+  }
+
+  /**
+   * @param {string} title @param {string} text
+   * @param {string} [action] button markup, already escaped
+   */
+  function emptyHTML(title, text, action) {
+    return `<div class="state state--empty"><h4>${esc(title)}</h4><p>${esc(text)}</p>${action || ""}</div>`;
+  }
+  /** @param {string} title @param {string} text @param {string} [action] */
+  function errorHTML(title, text, action) {
+    return `<div class="state state--error" role="alert"><h4>${esc(title)}</h4><p>${esc(text)}</p>${action || ""}</div>`;
+  }
+  const toContextBtn = `<button class="btn btn--tonal" type="button" data-goto="context">Back to Context</button>`;
+  function wireGoto() {
+    $$("#ctxBody [data-goto]").forEach((b) =>
+      b.addEventListener("click", () => setTab(b.dataset.goto)),
+    );
+  }
+
+  /** Show the final-shape skeleton in the right-hand panel. @param {"context" | "authorities" | "sources"} tab */
+  function setLoading(tab) {
+    const body = $("#ctxBody");
+    body.setAttribute("aria-busy", "true");
+    body.innerHTML = skeletonHTML(tab);
+  }
+
+  /** @type {(el: Element) => void} */
+  const unbusy = (el) => el.removeAttribute("aria-busy");
+
   /* -------------------------------------------------------- authorities tab */
+  function clearTrace() {
+    $$(".is-tracing").forEach((el) => el.classList.remove("is-tracing"));
+  }
+  /** Mark a table-of-authorities row and the margin numbers it cites. @param {Element} row @param {string} id @param {boolean} on */
+  function trace(row, id, on) {
+    row.classList.toggle("is-tracing", on);
+    paragraphsCiting(id).forEach((n) => {
+      const pn = $(`#paper .pnum[data-pn="${n}"]`);
+      if (pn) pn.classList.toggle("is-tracing", on);
+    });
+  }
+
+  const TOA_GROUPS = /** @type {const} */ ([
+    ["case", "Cases"],
+    ["statute", "Statutes"],
+    ["rule", "Rules"],
+  ]);
+
+  /** @param {Cite} c @param {boolean} open */
+  function toaRowHTML(c, open) {
+    const pages = paragraphsCiting(c.id);
+    const uses = (citeUses[c.id] || []).length;
+    const detail = open
+      ? `<div class="toa__detail">
+          <span class="auth__badge ${badgeClass(c.weight)}">${esc(c.weight)}</span>
+          <div class="auth__full">${esc(c.full)}</div>
+          <div class="auth__prop">${esc(c.proposition)}</div>
+          <div class="auth__links">
+            <button data-locate="${c.id}">Locate in document${uses > 1 ? ` (${uses})` : ""}</button>
+            ${c.source ? `<button data-readsrc="${c.source}">Source memo</button>` : ""}
+            ${c.url ? `<a href="${escAttr(c.url)}" target="_blank" rel="noopener">Full text ↗</a>` : ""}
+          </div>
+        </div>`
+      : "";
+    return `<li class="toa__row${open ? " is-open" : ""}" data-auth="${c.id}">
+      <button class="toa__main" type="button" data-toa="${c.id}"${open ? ' aria-current="true"' : ""}>
+        <span class="toa__name toa__name--${c.kind}">${esc(c.short)}</span>
+        <span class="toa__leader" aria-hidden="true"></span>
+        <span class="toa__pages">${pages.length ? esc(pages.join(", ")) : "not cited"}</span>
+      </button>${detail}
+    </li>`;
+  }
+
+  /** @param {string} [flashId] */
   function renderAuthorities(flashId) {
     const body = $("#ctxBody");
-    const order = ["case", "statute", "rule"];
-    const sorted = [...CITES].sort(
-      (a, b) => order.indexOf(a.kind) - order.indexOf(b.kind),
-    );
-    body.innerHTML =
-      `<div class="filterbar">${CITES.length} authorities · cases, statutes &amp; rules</div>` +
-      sorted.map((c) => authCard(c)).join("");
+    if (!CITES.length) {
+      body.innerHTML = emptyHTML(
+        "No authorities cited yet",
+        "Cases, statutes and rules appear here, with the paragraphs that cite them, once the document cites one.",
+        toContextBtn,
+      );
+      wireGoto();
+      return;
+    }
+    const groups = TOA_GROUPS.map(([kind, label]) => {
+      const items = CITES.filter((c) => c.kind === kind);
+      return items.length
+        ? `<h3 class="toa__group">${label}</h3><ul class="toa__list">${items.map((c) => toaRowHTML(c, c.id === flashId)).join("")}</ul>`
+        : "";
+    }).join("");
+    body.innerHTML = `<p class="toa__lede">${CITES.length} authorities, with the paragraph numbers that cite each.</p>${groups}`;
     wireCtxCards();
+    $$("#ctxBody .toa__row").forEach((row) => {
+      const id = row.dataset.auth;
+      const on = () => trace(row, id, true);
+      const off = () => trace(row, id, false);
+      row.addEventListener("mouseenter", on);
+      row.addEventListener("mouseleave", off);
+      row.addEventListener("focusin", on);
+      row.addEventListener("focusout", off);
+    });
+    $$("#ctxBody .toa__main").forEach((b) =>
+      b.addEventListener("click", () => {
+        locateCitation(b.dataset.toa, true);
+        closeRailDrawer(true); // narrow screens: reveal the cited paragraph
+      }),
+    );
     if (flashId) {
-      const card = $(`#ctxBody .auth[data-auth="${flashId}"]`);
-      if (card) {
-        card.classList.add("is-flash");
-        card.scrollIntoView({ block: "center", behavior: "smooth" });
-        setTimeout(() => card.classList.remove("is-flash"), 1400);
+      const row = $(`#ctxBody .toa__row[data-auth="${flashId}"]`);
+      if (row) {
+        row.classList.add("is-flash");
+        row.scrollIntoView({ block: "center", behavior: "smooth" });
+        setTimeout(() => row.classList.remove("is-flash"), 1400);
       }
     }
   }
 
   /* ------------------------------------------------------------ sources tab */
+  /** @param {RefMeta} r */
+  function sourceRowHTML(r) {
+    const uses = (srcUses[r.id] || []).length;
+    const active = state.sourceFilter === r.id;
+    return `<li class="srow${active ? " is-active" : ""}" data-src="${r.id}">
+      <button class="srow__main" type="button" aria-pressed="${active}">
+        <span class="srow__title">${docIcon()} ${esc(r.title)}</span>
+        <span class="srow__kind">Research memo, used by ${uses} section${uses === 1 ? "" : "s"}</span>
+        <span class="srow__blurb">${esc(r.blurb)}</span>
+      </button>
+      <button class="btn btn--text srow__open" type="button" aria-label="Open ${escAttr(r.title)}">Open</button>
+    </li>`;
+  }
+
   function renderSources() {
     const body = $("#ctxBody");
+    if (!REF_META.length) {
+      body.innerHTML = emptyHTML(
+        "No sources attached yet",
+        "Research memos that support the motion are listed here once they are added.",
+        toContextBtn,
+      );
+      wireGoto();
+      return;
+    }
     const filt = state.sourceFilter
-      ? `<div class="filterbar">Highlighting sections that use <strong>${esc(refMetaById[state.sourceFilter].title)}</strong> · <span class="clear" data-clearsrc>clear</span></div>`
+      ? `<div class="filterbar">Highlighting sections that use <strong>${esc(refMetaById[state.sourceFilter].title)}</strong> <button class="btn btn--text" type="button" data-clearsrc>Clear</button></div>`
       : `<div class="filterbar">Four research memos underpin this motion.</div>`;
-    body.innerHTML = filt + REF_META.map((r) => srcCard(r)).join("");
-    $$("#ctxBody .src").forEach((el) => {
-      el.addEventListener("click", (e) => {
-        if (e.detail === 2) return;
-        // single click highlights; the explicit link reads
-        toggleSourceFilter(el.dataset.src);
-      });
-      $(".src__open", el).addEventListener("click", (e) => {
+    body.innerHTML = `${filt}<ul class="srow__list">${REF_META.map(sourceRowHTML).join("")}</ul>`;
+    $$("#ctxBody .srow").forEach((el) => {
+      $(".srow__main", el).addEventListener("click", () =>
+        toggleSourceFilter(el.dataset.src),
+      );
+      $(".srow__open", el).addEventListener("click", (/** @type {Event} */ e) => {
         e.stopPropagation();
         openRef(el.dataset.src);
       });
@@ -613,6 +856,7 @@
       });
   }
 
+  /** @param {string} id */
   function toggleSourceFilter(id) {
     state.sourceFilter = state.sourceFilter === id ? null : id;
     state.selected = null;
@@ -629,6 +873,7 @@
   }
 
   /* --------------------------------------------------------------- locate */
+  /** @param {string} id @param {boolean} [scroll] */
   function locateCitation(id, scroll) {
     setTab("authorities", id);
     const hits = $$(`#paper .cite[data-cite="${id}"]`);
@@ -647,16 +892,35 @@
   }
 
   /* ------------------------------------------------------------- tabs/mode */
+  /** @param {"context" | "authorities" | "sources"} tab @param {string} [flashId] */
   function setTab(tab, flashId) {
     state.tab = tab;
     $$(".ctx__tab").forEach((t) =>
       t.setAttribute("aria-selected", String(t.dataset.tab === tab)),
     );
-    if (tab === "context") renderContext();
-    else if (tab === "authorities") renderAuthorities(flashId);
-    else renderSources();
+    $("#ctxBody").setAttribute("aria-labelledby", `ctxTab-${tab}`);
+    clearTrace();
+    // The skeleton stands in the panel's final shape while the content is built;
+    // the build runs in a microtask, so a caller never observes a half-built panel.
+    setLoading(tab);
+    queueMicrotask(() => {
+      if (state.tab !== tab) return;
+      const body = $("#ctxBody");
+      try {
+        if (tab === "context") renderContext();
+        else if (tab === "authorities") renderAuthorities(flashId);
+        else renderSources();
+      } catch (err) {
+        body.innerHTML = errorHTML(
+          "This panel could not be built",
+          "Something went wrong while building it. Choose the tab again to retry.",
+        );
+      }
+      unbusy(body);
+    });
   }
 
+  /** @param {"fill" | "edit" | "read"} mode */
   function setMode(mode) {
     state.mode = mode;
     $$(".segmented button").forEach((b) =>
@@ -673,24 +937,118 @@
   }
 
   /* ----------------------------------------------------------- ref drawer */
+  /** Latest open request, so a slow render never overwrites a newer one. */
+  let refToken = 0;
+  /** @param {string} id */
   function openRef(id) {
     const meta = refMetaById[id];
-    const md = REFS[id];
+    const body = $("#drawerBody");
+    const token = ++refToken;
     $("#drawerTitle").textContent = meta ? meta.title : "Reference";
-    $("#drawerBody").innerHTML = md
-      ? renderMarkdown(md)
-      : "<p>Reference text unavailable.</p>";
+    body.innerHTML = skeletonHTML("drawer");
+    body.setAttribute("aria-busy", "true");
     $("#drawer").classList.add("open");
     $("#scrim").classList.add("open");
-    $("#drawerBody").parentElement.scrollTop = 0;
+    body.parentElement.scrollTop = 0;
     $("#drawerClose").focus();
+    setTimeout(() => {
+      if (token !== refToken) return;
+      const md = REFS[id];
+      if (md) {
+        body.innerHTML = renderMarkdown(md);
+      } else {
+        body.innerHTML = errorHTML(
+          "Reference not found",
+          "This reference could not be opened. Close and choose it again from Sources.",
+          `<button class="btn btn--text" type="button" data-closeref>Close</button>`,
+        );
+        $("[data-closeref]", body).addEventListener("click", closeRef);
+      }
+      unbusy(body);
+    }, 0);
   }
   function closeRef() {
     $("#drawer").classList.remove("open");
     $("#scrim").classList.remove("open");
   }
+  function refIsOpen() {
+    return $("#drawer").classList.contains("open");
+  }
+
+  /* ------------------------------------------- form and context drawers */
+  /** Below 1080px the form rail and context rail are drawers. */
+  const narrow = window.matchMedia("(max-width: 1080px)");
+  /** @type {"rail" | "ctx" | null} */
+  let openRail = null;
+  /** @type {HTMLElement | null} */
+  let railOpener = null;
+  const RAILS = /** @type {const} */ ([
+    ["rail", "#rail", "#btnFields", "show-rail-mobile"],
+    ["ctx", "#ctx", "#btnAuthorities", "show-ctx-mobile"],
+  ]);
+  /** Reflect openRail in classes, aria and inert; the one place that decides. */
+  function syncRails() {
+    RAILS.forEach(([name, sel, btn, cls]) => {
+      const el = $(sel);
+      const open = narrow.matches && openRail === name;
+      const hidden = narrow.matches && !open;
+      document.body.classList.toggle(cls, open);
+      $(btn).setAttribute("aria-expanded", String(open));
+      el.toggleAttribute("inert", hidden);
+      if (hidden) el.setAttribute("aria-hidden", "true");
+      else el.removeAttribute("aria-hidden");
+      if (open) {
+        el.setAttribute("role", "dialog");
+        el.setAttribute("aria-modal", "true");
+      } else {
+        el.removeAttribute("role");
+        el.removeAttribute("aria-modal");
+      }
+    });
+    $("#railScrim").classList.toggle("open", narrow.matches && !!openRail);
+  }
+  /** @param {"rail" | "ctx"} name @param {HTMLElement} opener */
+  function openRailDrawer(name, opener) {
+    if (!narrow.matches) return;
+    openRail = name;
+    railOpener = opener;
+    syncRails();
+    const el = $(name === "rail" ? "#rail" : "#ctx");
+    const first = $("[data-close-drawer]", el);
+    if (first) first.focus();
+  }
+  /** @param {boolean} [restoreFocus] */
+  function closeRailDrawer(restoreFocus) {
+    if (!openRail) return;
+    const opener = railOpener;
+    openRail = null;
+    railOpener = null;
+    syncRails();
+    if (restoreFocus && opener) opener.focus();
+  }
+  /** Keep Tab inside the open drawer. @param {KeyboardEvent} e */
+  function trapRailFocus(e) {
+    if (e.key !== "Tab" || !openRail || !narrow.matches) return;
+    const el = $(openRail === "rail" ? "#rail" : "#ctx");
+    const items = /** @type {HTMLElement[]} */ ([
+      ...el.querySelectorAll(
+        'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])',
+      ),
+    ]).filter((n) => n.offsetParent !== null);
+    if (!items.length) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
 
   /* --------------------------------------------------- markdown (compact) */
+  /** @param {string} s */
   function mdInline(s) {
     s = esc(s);
     s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
@@ -702,10 +1060,12 @@
     s = s.replace(/(^|[^*])\*([^*\s][^*]*)\*/g, "$1<em>$2</em>");
     return s;
   }
+  /** @param {string} md */
   function renderMarkdown(md) {
     const lines = md.replace(/\r/g, "").split("\n");
     let html = "",
       i = 0;
+    /** @type {(l: string) => string[]} */
     const splitRow = (l) =>
       l
         .replace(/^\||\|$/g, "")
@@ -791,7 +1151,9 @@
   }
 
   /* --------------------------------------------------------------- toast */
+  /** @type {ReturnType<typeof setTimeout> | undefined} */
   let toastT;
+  /** @param {string} msg */
   function toast(msg) {
     const t = $("#toast");
     t.textContent = msg;
@@ -821,6 +1183,7 @@
     ATTORNEY_EMAIL: "jlee@leeassociates.com",
     BAR_NO: "312045",
   };
+  /** @param {Record<string, string>} map */
   function applyValues(map) {
     FIELDS.forEach((f) => {
       if (f.type !== "computed") state.values[f.id] = map[f.id] || "";
@@ -855,18 +1218,48 @@
     });
     $("#drawerClose").addEventListener("click", closeRef);
     $("#scrim").addEventListener("click", closeRef);
-    $("#stage").addEventListener("click", (e) => {
-      if (e.target.id === "stage" || e.target.id === "paper") {
+    $("#btnFields").addEventListener("click", (/** @type {Event} */ e) =>
+      openRailDrawer("rail", /** @type {HTMLElement} */ (e.currentTarget)),
+    );
+    $("#btnAuthorities").addEventListener("click", (/** @type {Event} */ e) => {
+      setTab("authorities");
+      openRailDrawer("ctx", /** @type {HTMLElement} */ (e.currentTarget));
+    });
+    $$("[data-close-drawer]").forEach((b) =>
+      b.addEventListener("click", () => closeRailDrawer(true)),
+    );
+    $("#railScrim").addEventListener("click", () => closeRailDrawer(true));
+    narrow.addEventListener("change", () => {
+      openRail = null;
+      railOpener = null;
+      syncRails();
+    });
+    syncRails();
+    $("#stage").addEventListener("click", (/** @type {Event} */ e) => {
+      const t = /** @type {Element} */ (e.target);
+      if (t.id === "stage" || t.id === "paper") {
         state.selected = null;
         applySelection();
         if (state.tab === "context") renderContext();
       }
     });
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") closeRef();
+      if (e.key === "Escape") {
+        if (refIsOpen()) closeRef();
+        else closeRailDrawer(true);
+      }
+      trapRailFocus(e);
     });
 
-    window.__recital = { state, setTab, selectSection, locateCitation }; // test hook
+    window.__recital = {
+      state,
+      setTab,
+      selectSection,
+      locateCitation,
+      paragraphsCiting,
+      openRef,
+      setLoading,
+    }; // test hook
   }
 
   if (document.readyState === "loading")
