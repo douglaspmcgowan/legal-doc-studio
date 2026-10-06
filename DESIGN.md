@@ -199,3 +199,173 @@ same nine names; derived tokens recompute. The print tokens (`--print-paper`,
 - **No heading is twice the body size.** The workbench has no page heading
   (the filing's own hierarchy is set at body size, as a court requires). The
   design-system pull request adds a display-size document title.
+
+# Design system: Classical (Typography for Lawyers)
+
+Committed 2026-10-06 on `agent/design-system-20261003`. This **replaces** the
+cobalt and cream identity above; on merge, the sections above describing cobalt,
+cream and Inter Tight are superseded by this one. Case: replace, not complete.
+The previous system was token-complete but generic (see the audit on PR #3).
+
+## Direction and sources
+
+A court filing set properly: generous margins, citations you can follow,
+sober, exact and bookish. White paper, navy ink, one gray, and oxblood (the
+colour of a law-book spine) for citations and the active reference.
+
+- **Pulled from:** Matthew Butterick, *Practical Typography* /
+  *Typography for Lawyers*, https://practicaltypography.com/ (listed in
+  `design-library/elsewhere/index.html`, line 435). Taken from it: body text
+  15 to 25px on screen, a line length of 45 to 90 characters (held here at
+  65ch), line spacing of 120 to 145%, paragraph spacing *or* first-line
+  indent but never both, capitals letterspaced 5 to 12%, hanging punctuation
+  avoided, and one space after a period.
+- **Icon kit:** Tabler Icons 3.49.0, MIT, https://tabler.io/icons (listed in
+  `design-lab/data/library/stack-catalogue.json`, id `tabler`). Outline
+  set, inlined as SVG with `stroke-width: 1.5`, so there is no runtime
+  dependency.
+- **Typefaces:** Libre Caslon Text (display and document) and Public Sans
+  (chrome), both from Google Fonts with `display=swap`.
+
+## Colour tokens (light, the committed mode)
+
+| Token | Value | Role |
+| --- | --- | --- |
+| `--canvas` | `#EEF0F2` | Page level, the desk under the sheet |
+| `--paper` | `#FCFCFA` | Raised level: the sheet, rails and drawer |
+| `--ink` | `#0A263A` | The single text ink (the navy that already ships) |
+| `--gray` | `#56626D` | The one gray: secondary text, rules, line numbers |
+| `--oxblood` | `#6B1D24` | Accent: citations, the active reference, primary action |
+| `--status-blank` | `#8A5D11` | Status: field still blank (with the word "blank") |
+| `--status-statute` | `#1D6B4A` | Status: statute or rule authority (with the label "Statute") |
+| `--status-error` | `#9A3412` | Status: a reference failed to load (with an error message) |
+
+Surface levels: `--surface-page` = canvas, `--surface-card` = paper,
+`--surface-raised` = paper plus `--elev-2`, `--surface-border` = gray at 22%.
+Every wash, rule, ring, scrim and shadow is a `color-mix()` of these eight,
+so no other literal exists. Eight literals is under the baseline's ten.
+
+**Dark mode** is the same names redefined: canvas `#0D1620`, paper
+`#131F2B`, ink `#E7E9EC`, gray `#9AA6B1`, oxblood `#D59097` (lightened
+for 4.5:1 on paper), and the status hues lightened the same way. The print
+pair (`--print-paper`, `--print-ink`) is never redefined.
+
+## Type
+
+One ratio, the minor third (1.2), on a 16px root.
+
+| Token | Size | Role | Face |
+| --- | --- | --- | --- |
+| `--fs-sm` | 0.8333rem (13.33px) | Hints, line numbers, citation chips, meta | Public Sans |
+| `--fs-md` | 1rem (16px) | Chrome body, labels, controls; document prose | Public Sans; Libre Caslon Text |
+| `--fs-lg` | 1.2rem (19.2px) | Panel and drawer headings | Libre Caslon Text |
+| `--fs-display` | clamp(2rem, 1.9rem + 0.4vw, 2.0736rem) | Document title above the sheet | Libre Caslon Text |
+| `--fs-print` | 12pt | Print medium only | Libre Caslon Text |
+
+- The default screen renders three sizes: 13.33, 16 and about 33px.
+- Weights: Public Sans 400 and 600; Libre Caslon Text 400 and 700, plus
+  400 italic for case names.
+- Tabular numerals (`font-variant-numeric: tabular-nums`) on counts,
+  paragraph numbers and the table of authorities.
+- **Small caps exception:** the brief asked for real small caps. The Google
+  Fonts build of Libre Caslon Text carries no `smcp` feature (its GSUB
+  features, read with fontTools in this run, are `dnom`, `frac`, `liga`,
+  `numr` and `tnum`), and Butterick rejects synthesized small caps. So the
+  court headings that are capitals in the filing's own text keep their
+  capitals, tracked 6% per Butterick, and no small caps are faked.
+
+## Spacing, radius, elevation
+
+- Spacing: `--sp-1` to `--sp-8` = 4, 8, 12, 16, 24, 32, 48, 64. Gutters and
+  sheet margins use `clamp()` over the scale.
+- Radius: the sheet and the table of authorities are square-cut like a printed
+  page (`--r-none` 0). Controls and inputs take `--r-sm` 3px. A pill
+  (`--r-pill`) is reserved for the progress meter. Nothing else rounds.
+  This is the committed world overriding the craft floor's 12 to 16px card
+  default (precedence rule 1).
+- Elevation: `--elev-1` none, a hairline rule only (rails, rows);
+  `--elev-2` the sheet: a wide soft shadow tinted toward the ink;
+  `--elev-3` overlays (drawer, toast). Each surface declares one of them.
+
+## Motion
+
+Easing `--ease-out` cubic-bezier(0.16, 1, 0.3, 1). Durations `--dur-1`
+120ms, `--dur-2` 240ms, `--dur-3` 420ms. Under reduced motion every duration
+collapses to 0.01ms through the tokens.
+
+| Motion | Property | Communicates |
+| --- | --- | --- |
+| Control hover, press, focus | colour, background, transform scale 0.98 on press | Feedback: the control heard you |
+| Authority leader draw | `transform: scaleX(0→1)` on the dot leader | Relationship: this authority leads to these paragraphs |
+| Cited paragraph mark | opacity on the margin number's oxblood mark | Sequence: where the citation lands |
+| Drawer in and out | `transform: translateX` / `translateY` plus scrim opacity | State change: a layer opened over the document |
+| Field token fill flash | opacity of a wash | Feedback: the value propagated to every place it appears |
+| Progress meter | `transform: scaleX` | State: how much of the filing is complete |
+| Toast | opacity plus translateY | Feedback: an action completed |
+
+## Layout grid
+
+- **1440:** three columns: the form rail (320px), the stage, and the context
+  rail (360px). The stage holds the document title row and the sheet; the
+  sheet's text column is 65ch with a margin gutter for paragraph numbers.
+- **768:** one column. The form opens as a drawer from the left
+  (`body.show-rail-mobile`, the existing scaffold), and the context rail opens
+  as a drawer from the right. Both have topbar buttons, so no control is lost
+  below 1080px.
+- **375:** one column. The drawers fill the full width, the sheet's margins
+  clamp down to 16px, and the margin numbers move inside the text column.
+
+## Components and states
+
+Every component has default, hover, focus-visible, active and disabled states
+where it is interactive; regions that can lack data have loading, empty and
+error states.
+
+- **Buttons:** primary is filled oxblood (Print / PDF); secondary is tonal
+  (Use sample data); tertiary is text with an underline (Clear). There is no
+  outlined tier.
+- **Segmented mode switch** (Fill, Read, Edit): the selected segment sits on
+  paper with an ink underline.
+- **Field input:** the label is above and the hint or error below; a 1px
+  bottom rule thickens to 2px oxblood on focus. Its blank state carries
+  `--status-blank` plus the word "blank".
+- **Field token in the document:** blank tokens get an amber wash and a dotted
+  underline; filled tokens get no wash and a hairline underline; the active
+  token gets an oxblood underline.
+- **Citation chip:** oxblood ink, Public Sans at `--fs-sm`, with an underline
+  on hover and a solid fill when active.
+- **Table of authorities** (Authorities tab): Cases, Statutes and Rules
+  headings; each row is the authority (case names in italic), a dot leader,
+  and the paragraph numbers that cite it in tabular numerals. Hover or focus
+  draws the leader and marks those paragraphs in the margin.
+- **Source row** (Sources tab): title, kind and an Open control.
+- **Drawers:** reference reader, form (below 1080px) and context (below 1080px).
+- **Toast**, **progress meter**, **tabs**.
+- **Panel states:** a loading skeleton in the final shape, an empty state
+  saying what belongs there and offering one action, and an error state saying
+  what failed and how to retry.
+
+## Recorded exceptions
+
+- Court headings stay in capitals (filing text, not interface labels).
+- The party caption's 2px vertical rule stays (court caption facsimile).
+- The sheet is square-cut (radius 0) under the committed world.
+- Line numbers: true per-line pleading-paper numbering is rejected because the
+  caption and headings break the baseline grid. Paragraph numbers sit in the
+  margin instead, which is also what the table of authorities cites.
+
+## Recommendations
+
+- **Built in this pull request:**
+  - The table of authorities with dot leaders and margin paragraph marks.
+  - The form drawer below 1080px, from the dead `show-rail-mobile` scaffold.
+  - The context drawer below 1080px.
+  - The document set to a 65ch measure with paragraph numbers in the margin.
+  - A display-size document title above the sheet.
+  - Tabler icons throughout, and an oxblood favicon and brand mark.
+- **Proposed for later:**
+  - Vendor the two typefaces (self-host the woff2 files) so the app works offline.
+  - A "jump to next blank" control with a keyboard shortcut.
+  - Export the table of authorities as a printable page.
+  - Redline mode for contracts. If heavy redlining becomes the main use, move
+    the app to the redline-idetc world instead, per the allocation's wrong-if.
