@@ -1,58 +1,62 @@
 /* Recital — Legal Document Studio
- * Brand: Sellit Cobalt (cohesive with amaxeliteseals.org). Product-UI register.
- * UI chrome: Inter Tight. Document surface: system serif (authentic filing look).
+ * Design system: Classical (Typography for Lawyers); see DESIGN.md.
+ * UI chrome: Public Sans. Document surface and headings: Libre Caslon Text.
  * Every colour, size, space, radius, shadow and duration below :root is a token. */
 
 :root {
-  /* Colour: nine base literals. Everything else is mixed from these. */
-  --cobalt: #3f69ff; /* accent: actions, selection, case-law citations */
-  --cobalt-deep: #2e49a8; /* accent as text on light surfaces */
-  --ink: #0a263a; /* the single text ink, chrome and document */
-  --cream: #fbf6eb; /* canvas */
-  --paper: #fffdf8; /* raised surface: document, rails, cards */
-  --line: #e7e0d2; /* hairlines */
-  --muted: #5d6b73; /* secondary text, 5:1 on paper and on cream */
-  --amber: #8a5d11; /* status: field still blank */
-  --statute: #1d6b4a; /* status: statute or rule citation */
+  /* Colour: eight literals. Everything else is a color-mix() of these. */
+  --canvas: #eef0f2; /* page level, the desk under the sheet */
+  --paper: #fcfcfa; /* raised level: sheet, rails, drawer */
+  --ink: #0a263a; /* the single text ink */
+  --gray: #56626d; /* the one gray: secondary text, rules */
+  --oxblood: #6b1d24; /* accent: citations, active reference, primary action */
+  --status-blank: #8a5d11; /* status: field still blank */
+  --status-statute: #1d6b4a; /* status: statute or rule authority */
+  --status-error: #9a3412; /* status: a reference failed to load */
   --shade: var(--ink); /* shadow and scrim base */
+
+  /* Surface levels */
+  --surface-page: var(--canvas);
+  --surface-card: var(--paper);
+  --surface-raised: var(--paper); /* plus --elev-2 */
+  --surface-border: color-mix(in oklab, var(--gray) 22%, transparent);
 
   /* Derived colour (never a new literal) */
   --on-accent: var(--paper);
-  --line-2: color-mix(in oklab, var(--line) 75%, var(--muted));
-  --tint: color-mix(in oklab, var(--cream) 45%, var(--paper));
-  --cobalt-wash: color-mix(in oklab, var(--cobalt) 9%, var(--paper));
-  --sel: color-mix(in oklab, var(--cobalt) 12%, var(--paper));
-  --filled-underline: color-mix(in oklab, var(--cobalt) 40%, var(--paper));
-  --computed-underline: color-mix(in oklab, var(--cobalt) 28%, transparent);
-  --amber-line: color-mix(in oklab, var(--amber) 45%, var(--paper));
-  --tok-empty-bg: color-mix(in oklab, var(--amber) 10%, transparent);
-  --tok-empty-bg-hover: color-mix(in oklab, var(--amber) 16%, transparent);
-  --srchit: color-mix(in oklab, var(--amber) 16%, var(--paper));
+  --oxblood-hover: color-mix(in oklab, var(--oxblood) 85%, var(--ink));
+  --rule-2: color-mix(in oklab, var(--gray) 40%, transparent);
+  --tint: color-mix(in oklab, var(--canvas) 45%, var(--paper));
+  --accent-wash: color-mix(in oklab, var(--oxblood) 8%, var(--paper));
+  --sel: color-mix(in oklab, var(--oxblood) 12%, var(--paper));
+  --filled-underline: color-mix(in oklab, var(--oxblood) 40%, var(--paper));
+  --computed-underline: color-mix(in oklab, var(--oxblood) 28%, transparent);
+  --blank-line: color-mix(in oklab, var(--status-blank) 45%, var(--paper));
+  --tok-empty-bg: color-mix(in oklab, var(--status-blank) 10%, transparent);
+  --tok-empty-bg-hover: color-mix(in oklab, var(--status-blank) 16%, transparent);
+  --srchit: color-mix(in oklab, var(--status-blank) 16%, var(--paper));
   --cite-ink: color-mix(in oklab, var(--ink) 78%, var(--paper));
   --cite-line: color-mix(in oklab, var(--ink) 20%, var(--paper));
-  --statute-wash: color-mix(in oklab, var(--statute) 12%, var(--paper));
-  --persuasive-wash: color-mix(in oklab, var(--line) 60%, var(--paper));
+  --statute-wash: color-mix(in oklab, var(--status-statute) 12%, var(--paper));
+  --error-wash: color-mix(in oklab, var(--status-error) 10%, var(--paper));
+  --persuasive-wash: color-mix(in oklab, var(--gray) 12%, var(--paper));
   --scrim-bg: color-mix(in oklab, var(--shade) 45%, transparent);
 
   /* Focus and flash rings */
-  --focus-ring: 0 0 0 3px color-mix(in oklab, var(--cobalt) 16%, transparent);
+  --focus-ring: 0 0 0 3px color-mix(in oklab, var(--oxblood) 16%, transparent);
   --focus-ring-strong:
-    0 0 0 3px color-mix(in oklab, var(--cobalt) 28%, transparent);
-  --flash-ring: 0 0 0 3px color-mix(in oklab, var(--cobalt) 22%, transparent);
-  --hover-ring: 0 0 0 1px var(--cobalt);
+    0 0 0 3px color-mix(in oklab, var(--oxblood) 28%, transparent);
+  --flash-ring: 0 0 0 3px color-mix(in oklab, var(--oxblood) 22%, transparent);
+  --hover-ring: 0 0 0 1px var(--oxblood);
 
-  /* Type: one scale, 12 / 14 / 16 / 20 / 24 */
+  /* Type: minor third (1.2) on a 16px root */
   --sans:
-    "Inter Tight", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --serif:
-    "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia,
-    "Times New Roman", serif;
+    "Public Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --serif: "Libre Caslon Text", Georgia, "Times New Roman", serif;
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  --fs-sm: 12px; /* hints, badges, citation chips, secondary labels */
-  --fs-md: 14px; /* chrome: controls, labels, field tokens */
-  --fs-lg: 16px; /* document prose, headings, brand */
-  --fs-xl: 20px; /* reference reader section heading */
-  --fs-2xl: 24px; /* reference reader title */
+  --fs-sm: 0.8333rem; /* hints, line numbers, citation chips, meta */
+  --fs-md: 1rem; /* chrome body, controls; document prose */
+  --fs-lg: 1.2rem; /* panel and drawer headings */
+  --fs-display: clamp(2rem, 1.9rem + 0.4vw, 2.0736rem); /* document title */
   --fs-print: 12pt; /* print medium, outside the screen scale */
 
   /* Space: one scale, every margin, padding and gap */
@@ -75,18 +79,16 @@
   --w-paper: 752px;
   --hit: 44px; /* minimum touch target */
 
-  /* Shape: sm chips and tokens, md controls, lg cards and surfaces */
-  --r-sm: 4px;
-  --r-md: 8px;
-  --r-lg: 12px;
+  /* Shape: sheet and cards square, controls 3px, pill for the meter only */
+  --r-none: 0;
+  --r-sm: 3px;
   --r-pill: 99px;
 
-  /* Elevation, one declaration per surface (a surface gets a shadow or a border, never both) */
-  --elev-1: 0 1px 2px color-mix(in oklab, var(--shade) 14%, transparent),
-    0 2px 8px color-mix(in oklab, var(--shade) 8%, transparent); /* resting card, active segment */
-  --elev-2: 0 1px 1px color-mix(in oklab, var(--shade) 4%, transparent),
-    0 4px 10px color-mix(in oklab, var(--shade) 5%, transparent),
-    0 16px 40px color-mix(in oklab, var(--shade) 7%, transparent); /* the document sheet */
+  /* Elevation, one declaration per surface */
+  --elev-1: 0 0 0 1px var(--surface-border); /* hairline rule: rails, rows, cards */
+  --elev-2: 0 1px 2px color-mix(in oklab, var(--shade) 6%, transparent),
+    0 8px 24px color-mix(in oklab, var(--shade) 8%, transparent),
+    0 28px 64px color-mix(in oklab, var(--shade) 10%, transparent); /* the sheet */
   --elev-3: 0 12px 40px color-mix(in oklab, var(--shade) 18%, transparent); /* overlay: drawer, toast */
 
   /* Print (never redefined by a colour scheme: paper is paper) */
@@ -101,9 +103,10 @@
   --z-toast: 60;
 
   /* Motion: durations are tokens so reduced motion redefines them, not each rule */
-  --dur-1: 150ms; /* hover, focus, press */
-  --dur-2: 300ms; /* drawer, flash, meter */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-1: 120ms; /* hover, focus, press */
+  --dur-2: 240ms; /* drawer, flash, meter */
+  --dur-3: 420ms; /* leader draw, larger transitions */
   --tr-ui:
     color var(--dur-1) var(--ease-out),
     background-color var(--dur-1) var(--ease-out),
@@ -125,7 +128,7 @@ body {
   margin: 0;
   font-family: var(--sans);
   color: var(--ink);
-  background: var(--cream);
+  background: var(--surface-page);
   font-size: var(--fs-md);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -137,7 +140,7 @@ button {
 }
 
 ::selection {
-  background: var(--cobalt);
+  background: var(--oxblood);
   color: var(--on-accent);
 }
 
@@ -165,7 +168,7 @@ button {
   padding: var(--sp-2) var(--sp-4);
   min-height: var(--h-topbar);
   background: var(--paper);
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--surface-border);
   z-index: var(--z-sticky);
 }
 
@@ -183,14 +186,14 @@ button {
 }
 .brand__name {
   font-weight: 700;
-  font-size: var(--fs-lg);
+  font-size: var(--fs-md);
 }
 .brand__doc {
   display: flex;
   flex-direction: column;
   line-height: 1.15;
   padding-left: var(--sp-3);
-  border-left: 1px solid var(--line);
+  border-left: 1px solid var(--surface-border);
   min-width: 0;
 }
 .brand__doc b {
@@ -199,7 +202,7 @@ button {
 }
 .brand__doc span {
   font-size: var(--fs-sm);
-  color: var(--muted);
+  color: var(--gray);
 }
 
 .topbar__spacer {
@@ -209,9 +212,9 @@ button {
 /* segmented mode control */
 .segmented {
   display: inline-flex;
-  background: var(--cream);
-  border: 1px solid var(--line);
-  border-radius: var(--r-lg);
+  background: var(--canvas);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--r-sm);
   padding: var(--sp-1);
   gap: var(--sp-2);
 }
@@ -219,13 +222,13 @@ button {
   position: relative;
   border: 0;
   background: transparent;
-  color: var(--muted);
+  color: var(--gray);
   font-size: var(--fs-md);
   font-weight: 600;
   min-height: var(--hit);
   min-width: var(--hit);
   padding: var(--sp-2) var(--sp-4);
-  border-radius: var(--r-md);
+  border-radius: var(--r-sm);
   cursor: pointer;
   transition: var(--tr-ui);
 }
@@ -234,7 +237,7 @@ button {
 }
 .segmented button[aria-pressed="true"] {
   background: var(--paper);
-  color: var(--cobalt-deep);
+  color: var(--oxblood);
   box-shadow: var(--elev-1);
 }
 
@@ -247,14 +250,14 @@ button {
 .progress__track {
   width: 96px;
   height: 6px;
-  background: var(--line);
+  background: var(--surface-border);
   border-radius: var(--r-pill);
   overflow: hidden;
 }
 .progress__fill {
   height: 100%;
   width: 100%;
-  background: var(--cobalt);
+  background: var(--oxblood);
   border-radius: var(--r-pill);
   transform: scaleX(0);
   transform-origin: left center;
@@ -262,7 +265,7 @@ button {
 }
 .progress__txt {
   font-size: var(--fs-sm);
-  color: var(--muted);
+  color: var(--gray);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -273,7 +276,7 @@ button {
   align-items: center;
   justify-content: center;
   gap: var(--sp-2);
-  border: 1px solid var(--line-2);
+  border: 1px solid var(--rule-2);
   background: var(--paper);
   color: var(--ink);
   font-size: var(--fs-md);
@@ -281,32 +284,32 @@ button {
   min-height: var(--hit);
   min-width: var(--hit);
   padding: var(--sp-2) var(--sp-3);
-  border-radius: var(--r-md);
+  border-radius: var(--r-sm);
   cursor: pointer;
   transition: var(--tr-ui);
 }
 .btn:hover {
-  background: var(--cream);
-  border-color: var(--muted);
+  background: var(--canvas);
+  border-color: var(--gray);
 }
 .btn:active {
   transform: scale(0.97);
 }
 .btn--primary {
-  background: var(--cobalt);
-  border-color: var(--cobalt);
+  background: var(--oxblood);
+  border-color: var(--oxblood);
   color: var(--on-accent);
 }
 .btn--primary:hover {
-  background: var(--cobalt-deep);
-  border-color: var(--cobalt-deep);
+  background: var(--oxblood-hover);
+  border-color: var(--oxblood-hover);
 }
 .btn--ghost {
   border-color: transparent;
   background: transparent;
 }
 .btn--ghost:hover {
-  background: var(--cream);
+  background: var(--canvas);
 }
 .btn svg {
   width: 16px;
@@ -322,13 +325,13 @@ button {
   place-items: center;
   border: 0;
   background: transparent;
-  color: var(--muted);
-  border-radius: var(--r-md);
+  color: var(--gray);
+  border-radius: var(--r-sm);
   cursor: pointer;
   transition: var(--tr-ui);
 }
 .iconbtn:hover {
-  background: var(--cream);
+  background: var(--canvas);
   color: var(--ink);
 }
 .iconbtn:active {
@@ -342,7 +345,7 @@ button {
 /* --------------------------------------------------------------- left rail */
 .rail {
   background: var(--paper);
-  border-right: 1px solid var(--line);
+  border-right: 1px solid var(--surface-border);
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -350,16 +353,16 @@ button {
 }
 .rail__head {
   padding: var(--sp-4);
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--surface-border);
 }
 .rail__title {
-  font-size: var(--fs-lg);
+  font-size: var(--fs-md);
   font-weight: 600;
   margin: 0 0 var(--sp-1);
 }
 .rail__sub {
   font-size: var(--fs-sm);
-  color: var(--muted);
+  color: var(--gray);
   margin: 0;
 }
 .rail__actions {
@@ -378,7 +381,7 @@ button {
   min-height: 0;
 }
 .fgroup {
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--surface-border);
 }
 .fgroup__h {
   position: sticky;
@@ -387,12 +390,13 @@ button {
   padding: var(--sp-3) var(--sp-4) var(--sp-2);
   font-size: var(--fs-sm);
   font-weight: 600;
-  color: var(--muted);
+  color: var(--gray);
   z-index: 1;
 }
 .fgroup__h .count {
   float: right;
   font-weight: 400;
+  font-variant-numeric: tabular-nums;
 }
 .fields {
   padding: 2px var(--sp-4) var(--sp-4);
@@ -419,11 +423,11 @@ button {
   width: 6px;
   height: 6px;
   border-radius: var(--r-pill);
-  background: var(--amber-line);
+  background: var(--blank-line);
   flex: none;
 }
 .field--done .field__dot {
-  background: var(--cobalt);
+  background: var(--oxblood);
 }
 .field input,
 .field select {
@@ -432,42 +436,42 @@ button {
   color: var(--ink);
   min-height: var(--hit);
   padding: var(--sp-2) var(--sp-3);
-  border: 1px solid var(--line);
-  border-radius: var(--r-md);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--r-sm);
   background: var(--tint);
   width: 100%;
   transition: var(--tr-ui);
 }
 .field input::placeholder {
-  color: var(--muted);
+  color: var(--gray);
 }
 .field input:hover,
 .field select:hover {
-  border-color: var(--line-2);
+  border-color: var(--rule-2);
   background: var(--paper);
 }
 .field input:focus-visible,
 .field select:focus-visible {
   outline: none;
   background: var(--paper);
-  border-color: var(--cobalt);
+  border-color: var(--oxblood);
   box-shadow: var(--focus-ring);
 }
 .field__hint {
   font-size: var(--fs-sm);
-  color: var(--muted);
+  color: var(--gray);
   line-height: 1.4;
 }
 .field--computed input {
-  background: var(--cobalt-wash);
+  background: var(--accent-wash);
   border-style: dashed;
-  color: var(--cobalt-deep);
+  color: var(--oxblood);
   font-weight: 600;
 }
 .field.is-flash input,
 .field.is-flash select {
   box-shadow: var(--focus-ring-strong);
-  border-color: var(--cobalt);
+  border-color: var(--oxblood);
 }
 
 /* --------------------------------------------------------------- document */
@@ -475,25 +479,19 @@ button {
   overflow-y: auto;
   min-height: 0;
   padding: var(--sp-6) var(--sp-stage-x) var(--sp-8);
-  background:
-    radial-gradient(
-      1200px 380px at 50% -120px,
-      var(--tint) 0%,
-      transparent 70%
-    ),
-    var(--cream);
+  background: var(--surface-page);
 }
 .paper {
   max-width: var(--w-paper);
   margin: 0 auto;
   background: var(--paper);
-  border-radius: var(--r-lg);
+  border-radius: var(--r-none);
   box-shadow: var(--elev-2);
   padding: var(--sp-8) var(--sp-paper-x);
   font-family: var(--serif);
   color: var(--ink);
-  font-size: var(--fs-lg);
-  line-height: 1.75;
+  font-size: var(--fs-md);
+  line-height: 1.45;
   overflow-wrap: anywhere;
 }
 .doc-part {
@@ -507,7 +505,7 @@ button {
   align-items: center;
   gap: var(--sp-3);
   margin: var(--sp-7) 0 var(--sp-5);
-  color: var(--muted);
+  color: var(--gray);
   font-family: var(--sans);
   font-size: var(--fs-md);
   font-weight: 600;
@@ -516,7 +514,7 @@ button {
 .part-rule::after {
   content: "";
   height: 1px;
-  background: var(--line-2);
+  background: var(--rule-2);
   flex: 1;
 }
 
@@ -532,27 +530,29 @@ button {
 }
 .s-h1 {
   font-weight: 700;
-  font-size: var(--fs-lg);
+  font-size: var(--fs-md);
   text-align: center;
   margin: var(--sp-6) 0 var(--sp-3);
+  letter-spacing: 0.06em;
 }
 .s-h2 {
   font-weight: 700;
-  font-size: var(--fs-lg);
+  font-size: var(--fs-md);
   margin: var(--sp-5) 0 var(--sp-3);
 }
 .s-h3 {
-  font-weight: 600;
-  font-size: var(--fs-lg);
+  font-weight: 700;
+  font-size: var(--fs-md);
   margin: var(--sp-5) 0 var(--sp-2);
 }
 .s-title {
   font-weight: 700;
-  font-size: var(--fs-lg);
+  font-size: var(--fs-md);
   text-align: center;
   margin: var(--sp-5) 0 var(--sp-4);
   text-decoration: underline;
   text-underline-offset: 3px;
+  letter-spacing: 0.06em;
 }
 .s-court {
   text-align: center;
@@ -560,12 +560,13 @@ button {
   white-space: pre-line;
   line-height: 1.5;
   margin: 0 0 var(--sp-4);
+  letter-spacing: 0.06em;
 }
 
 /* selectable sections (body/headings carry mappings) */
 .s--mappable {
   cursor: pointer;
-  border-radius: var(--r-md);
+  border-radius: var(--r-sm);
   transition: var(--tr-ui);
 }
 .s--mappable::before {
@@ -583,14 +584,14 @@ button {
   background: var(--tint);
 }
 .s--mappable:hover::before {
-  background: var(--line-2);
+  background: var(--rule-2);
 }
 .s--mappable.s--active {
   background: var(--sel);
   box-shadow: 0 0 0 var(--sp-2) var(--sel);
 }
 .s--mappable.s--active::before {
-  background: var(--cobalt);
+  background: var(--oxblood);
 }
 .s--dimmed {
   opacity: 0.42;
@@ -650,7 +651,7 @@ button {
 .s-cert {
   white-space: normal;
   margin: var(--sp-5) 0;
-  line-height: 1.6;
+  line-height: 1.45;
 }
 .s-sig .line,
 .s-cert .line {
@@ -663,6 +664,7 @@ button {
   font-weight: 700;
   text-align: center;
   margin-bottom: var(--sp-3);
+  letter-spacing: 0.06em;
 }
 
 /* field tokens inside the document */
@@ -679,8 +681,8 @@ button {
 }
 .tok--empty {
   background: var(--tok-empty-bg);
-  color: var(--amber);
-  box-shadow: inset 0 -2px 0 var(--amber-line);
+  color: var(--status-blank);
+  box-shadow: inset 0 -2px 0 var(--blank-line);
 }
 /* a filled value becomes part of the prose, no decoration at rest */
 .tok--filled {
@@ -692,9 +694,9 @@ button {
   padding: 0;
 }
 .tok--computed {
-  color: var(--cobalt-deep);
+  color: var(--oxblood);
   background: transparent;
-  font-weight: 600;
+  font-weight: 700;
   box-shadow: inset 0 -2px 0 var(--computed-underline);
   padding: 0 1px;
 }
@@ -703,7 +705,7 @@ button {
 }
 .tok--filled:hover,
 .tok--computed:hover {
-  background: var(--cobalt-wash);
+  background: var(--accent-wash);
   box-shadow: inset 0 -2px 0 var(--filled-underline);
 }
 .tok.is-flash {
@@ -711,7 +713,7 @@ button {
 }
 @keyframes tokflash {
   0% {
-    background: var(--cobalt);
+    background: var(--oxblood);
     color: var(--on-accent);
     box-shadow: var(--flash-ring);
   }
@@ -720,7 +722,7 @@ button {
 }
 
 /* Citations read like quiet footnote references at rest; the color coding
-   (cobalt = case law, green = statute/rule) reveals on hover and on locate. */
+   (oxblood = case law, green = statute/rule) reveals on hover and on locate. */
 .cite {
   font-family: var(--sans);
   font-size: var(--fs-sm);
@@ -735,27 +737,27 @@ button {
   transition: var(--tr-ui);
 }
 .cite:hover {
-  color: var(--cobalt-deep);
-  background: var(--cobalt-wash);
-  box-shadow: inset 0 -2px 0 var(--cobalt);
+  color: var(--oxblood);
+  background: var(--accent-wash);
+  box-shadow: inset 0 -2px 0 var(--oxblood);
 }
 .cite.is-flash {
   color: var(--on-accent);
-  background: var(--cobalt);
+  background: var(--oxblood);
   box-shadow: var(--flash-ring);
 }
 .cite--stat:hover {
-  color: var(--statute);
+  color: var(--status-statute);
   background: var(--statute-wash);
-  box-shadow: inset 0 -2px 0 var(--statute);
+  box-shadow: inset 0 -2px 0 var(--status-statute);
 }
 .cite--stat.is-flash {
-  background: var(--statute);
+  background: var(--status-statute);
 }
 /* the selected paragraph quietly lights up its own citations
    (but a citation being located keeps its stronger flash) */
 .s--active .cite:not(.is-flash) {
-  color: var(--cobalt-deep);
+  color: var(--oxblood);
   box-shadow: inset 0 -2px 0 var(--filled-underline);
 }
 
@@ -765,12 +767,12 @@ button {
 .editing .s-h2[contenteditable],
 .editing .s-h3[contenteditable],
 .editing .s-title[contenteditable] {
-  outline: 1px dashed var(--line-2);
+  outline: 1px dashed var(--rule-2);
   outline-offset: 4px;
-  border-radius: var(--r-md);
+  border-radius: var(--r-sm);
 }
 .editing .s-body[contenteditable]:focus {
-  outline: 1px solid var(--cobalt);
+  outline: 1px solid var(--oxblood);
   background: var(--tint);
 }
 [contenteditable] .tok,
@@ -781,7 +783,7 @@ button {
 /* -------------------------------------------------------------- right rail */
 .ctx {
   background: var(--paper);
-  border-left: 1px solid var(--line);
+  border-left: 1px solid var(--surface-border);
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -791,7 +793,7 @@ button {
   display: flex;
   padding: var(--sp-2) var(--sp-3) 0;
   gap: var(--sp-2);
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--surface-border);
 }
 .ctx__tab {
   border: 0;
@@ -799,7 +801,7 @@ button {
   cursor: pointer;
   font-size: var(--fs-md);
   font-weight: 600;
-  color: var(--muted);
+  color: var(--gray);
   min-height: var(--hit);
   min-width: var(--hit);
   padding: var(--sp-2) var(--sp-2);
@@ -811,8 +813,8 @@ button {
   color: var(--ink);
 }
 .ctx__tab[aria-selected="true"] {
-  color: var(--cobalt-deep);
-  border-bottom-color: var(--cobalt);
+  color: var(--oxblood);
+  border-bottom-color: var(--oxblood);
 }
 .ctx__body {
   overflow-y: auto;
@@ -824,23 +826,23 @@ button {
 
 /* context: empty / hint state */
 .ctx-empty {
-  color: var(--muted);
+  color: var(--gray);
   font-size: var(--fs-md);
   line-height: 1.6;
 }
 .ctx-empty h4 {
   color: var(--ink);
-  font-size: var(--fs-lg);
+  font-size: var(--fs-md);
   margin: 0 0 var(--sp-2);
 }
 .ctx-empty .keycap {
   display: inline-block;
   padding: 0 var(--sp-1);
-  border: 1px solid var(--line-2);
+  border: 1px solid var(--rule-2);
   border-bottom-width: 2px;
   border-radius: var(--r-sm);
   font-size: var(--fs-sm);
-  background: var(--cream);
+  background: var(--canvas);
 }
 .ctx-empty ul {
   padding-left: var(--sp-4);
@@ -853,7 +855,7 @@ button {
 .ctx-sec-label {
   font-size: var(--fs-sm);
   font-weight: 600;
-  color: var(--muted);
+  color: var(--gray);
   margin: 0 0 var(--sp-2);
 }
 .ctx-sec-label:not(:first-child) {
@@ -861,15 +863,15 @@ button {
 }
 
 .derivation {
-  background: var(--cream);
-  border-radius: var(--r-lg);
+  background: var(--canvas);
+  border-radius: var(--r-none);
   padding: var(--sp-3) var(--sp-4);
   font-size: var(--fs-md);
   line-height: 1.6;
   color: var(--ink);
 }
 .derivation .q {
-  color: var(--cobalt-deep);
+  color: var(--oxblood);
   font-weight: 700;
 }
 
@@ -878,7 +880,7 @@ button {
 .auth,
 .src {
   background: var(--paper);
-  border-radius: var(--r-lg);
+  border-radius: var(--r-none);
   box-shadow: var(--elev-1);
   padding: var(--sp-3) var(--sp-4);
   margin-bottom: var(--sp-3);
@@ -892,7 +894,7 @@ button {
 .auth.is-flash,
 .src.is-flash {
   box-shadow: var(--elev-1), var(--hover-ring);
-  background: var(--cobalt-wash);
+  background: var(--accent-wash);
 }
 .auth__top {
   display: flex;
@@ -914,15 +916,15 @@ button {
 }
 .badge--binding {
   background: var(--statute-wash);
-  color: var(--statute);
+  color: var(--status-statute);
 }
 .badge--controlling {
-  background: var(--cobalt-wash);
-  color: var(--cobalt-deep);
+  background: var(--accent-wash);
+  color: var(--oxblood);
 }
 .badge--persuasive {
   background: var(--persuasive-wash);
-  color: var(--muted);
+  color: var(--gray);
 }
 .auth__full {
   font-family: var(--serif);
@@ -933,7 +935,7 @@ button {
 }
 .auth__auth {
   font-size: var(--fs-sm);
-  color: var(--muted);
+  color: var(--gray);
   margin-top: var(--sp-1);
 }
 .auth__prop {
@@ -956,23 +958,23 @@ button {
   min-width: var(--hit);
   font-family: inherit;
   font-size: var(--fs-sm);
-  color: var(--cobalt-deep);
+  color: var(--oxblood);
   font-weight: 600;
   text-decoration: none;
   background: none;
   border: 0;
   padding: 0 var(--sp-2);
-  border-radius: var(--r-md);
+  border-radius: var(--r-sm);
   cursor: pointer;
   transition: var(--tr-ui);
 }
 .auth__links a:hover,
 .auth__links button:hover {
-  background: var(--cobalt-wash);
+  background: var(--accent-wash);
 }
 .auth__uses {
   font-size: var(--fs-sm);
-  color: var(--muted);
+  color: var(--gray);
 }
 
 /* source (reference doc) card */
@@ -986,12 +988,12 @@ button {
 .src__t svg {
   width: 16px;
   height: 16px;
-  color: var(--cobalt);
+  color: var(--oxblood);
   flex: none;
 }
 .src__b {
   font-size: var(--fs-md);
-  color: var(--muted);
+  color: var(--gray);
   line-height: 1.5;
   margin: var(--sp-2) 0 0;
 }
@@ -1005,12 +1007,12 @@ button {
   cursor: pointer;
   font-family: inherit;
   font-size: var(--fs-sm);
-  color: var(--cobalt-deep);
+  color: var(--oxblood);
   font-weight: 600;
   margin-top: var(--sp-1);
   min-height: var(--hit);
   min-width: var(--hit);
-  border-radius: var(--r-md);
+  border-radius: var(--r-sm);
   display: inline-flex;
   align-items: center;
   gap: var(--sp-1);
@@ -1020,7 +1022,7 @@ button {
   margin-left: var(--sp-2);
 }
 .src__open:hover {
-  background: var(--cobalt-wash);
+  background: var(--accent-wash);
 }
 
 /* wide panel: the same cards gain room and the links sit apart */
@@ -1040,7 +1042,7 @@ button {
 
 .filterbar {
   font-size: var(--fs-sm);
-  color: var(--muted);
+  color: var(--gray);
   margin: 0 0 var(--sp-3);
   display: flex;
   align-items: center;
@@ -1048,14 +1050,14 @@ button {
   flex-wrap: wrap;
 }
 .filterbar .clear {
-  color: var(--cobalt-deep);
+  color: var(--oxblood);
   cursor: pointer;
   font-weight: 600;
   border-radius: var(--r-sm);
   transition: var(--tr-ui);
 }
 .filterbar .clear:hover {
-  background: var(--cobalt-wash);
+  background: var(--accent-wash);
 }
 
 /* -------------------------------------------------------------- ref drawer */
@@ -1094,11 +1096,11 @@ button {
   align-items: center;
   gap: var(--sp-3);
   padding: var(--sp-2) var(--sp-4);
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--surface-border);
 }
 .drawer__head h3 {
   margin: 0;
-  font-size: var(--fs-lg);
+  font-size: var(--fs-md);
   font-weight: 600;
   flex: 1;
 }
@@ -1111,25 +1113,25 @@ button {
 .md {
   font-family: var(--serif);
   color: var(--ink);
-  font-size: var(--fs-lg);
-  line-height: 1.7;
+  font-size: var(--fs-md);
+  line-height: 1.45;
   max-width: 64ch;
 }
 .md h1 {
   font-family: var(--sans);
-  font-size: var(--fs-2xl);
+  font-size: var(--fs-lg);
   margin: var(--sp-5) 0 var(--sp-3);
 }
 .md h2 {
   font-family: var(--sans);
-  font-size: var(--fs-xl);
+  font-size: var(--fs-lg);
   margin: var(--sp-5) 0 var(--sp-2);
   padding-bottom: var(--sp-1);
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--surface-border);
 }
 .md h3 {
   font-family: var(--sans);
-  font-size: var(--fs-lg);
+  font-size: var(--fs-md);
   margin: var(--sp-4) 0 var(--sp-2);
 }
 .md p {
@@ -1145,22 +1147,22 @@ button {
 }
 .md hr {
   border: 0;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--surface-border);
   margin: var(--sp-5) 0;
 }
 .md code {
   font-family: var(--mono);
   font-size: var(--fs-md);
-  background: var(--cream);
+  background: var(--canvas);
   padding: 1px var(--sp-1);
   border-radius: var(--r-sm);
 }
 .md a {
-  color: var(--cobalt-deep);
+  color: var(--oxblood);
   transition: var(--tr-ui);
 }
 .md a:hover {
-  background: var(--cobalt-wash);
+  background: var(--accent-wash);
 }
 .md strong {
   font-weight: 700;
@@ -1174,20 +1176,20 @@ button {
 }
 .md th,
 .md td {
-  border: 1px solid var(--line-2);
+  border: 1px solid var(--rule-2);
   padding: var(--sp-2) var(--sp-3);
   text-align: left;
   vertical-align: top;
 }
 .md th {
-  background: var(--cream);
+  background: var(--canvas);
   font-weight: 600;
 }
 .md blockquote {
   margin: var(--sp-3) 0;
   padding: var(--sp-3) var(--sp-4);
-  background: var(--cobalt-wash);
-  border-radius: 0 var(--r-md) var(--r-md) 0;
+  background: var(--accent-wash);
+  border-radius: var(--r-none);
   color: var(--ink);
 }
 
@@ -1203,7 +1205,7 @@ button {
   font-size: var(--fs-md);
   font-weight: 600;
   padding: var(--sp-3) var(--sp-4);
-  border-radius: var(--r-lg);
+  border-radius: var(--r-sm);
   box-shadow: var(--elev-3);
   opacity: 0;
   pointer-events: none;
@@ -1241,10 +1243,10 @@ button {
     max-width: var(--w-paper);
     margin: 0 auto var(--sp-3);
     padding: var(--sp-3);
-    background: var(--cobalt-wash);
-    border-radius: var(--r-lg);
+    background: var(--accent-wash);
+    border-radius: var(--r-sm);
     font-size: var(--fs-md);
-    color: var(--cobalt-deep);
+    color: var(--oxblood);
   }
   body.show-rail-mobile .rail {
     display: flex;
@@ -1259,7 +1261,7 @@ button {
    (~/.agents/DESIGN.md § Accessibility). The blanket rule means a control
    added later cannot ship without one; the rules under it only tighten the fit. */
 :focus-visible {
-  outline: 2px solid var(--cobalt);
+  outline: 2px solid var(--oxblood);
   outline-offset: 2px;
 }
 .btn:focus-visible,
@@ -1288,7 +1290,7 @@ button {
 .editing .s-h2[contenteditable]:focus-visible,
 .editing .s-h3[contenteditable]:focus-visible,
 .editing .s-title[contenteditable]:focus-visible {
-  outline: 2px solid var(--cobalt);
+  outline: 2px solid var(--oxblood);
   outline-offset: 4px;
 }
 
@@ -1297,39 +1299,39 @@ button {
    values. Every derived token recomputes. The print tokens are absent: paper is paper. */
 @media (prefers-color-scheme: dark) {
   :root {
-    --cobalt: #7d9bff;
-    --cobalt-deep: #b3c5ff;
-    --ink: #e6ecf2;
-    --cream: #10161c;
-    --paper: #171f28;
-    --line: #2a343e;
-    --muted: #a5b2bc;
-    --amber: #f3ce85;
-    --statute: #79d7a8;
-    --shade: var(--cream);
+    --canvas: #0d1620;
+    --paper: #131f2b;
+    --ink: #e7e9ec;
+    --gray: #9aa6b1;
+    --oxblood: #d59097;
+    --status-blank: #e0b768;
+    --status-statute: #6fcf9f;
+    --status-error: #f0906a;
+    --shade: var(--canvas);
 
-    --cobalt-wash: color-mix(in oklab, var(--cobalt) 16%, var(--paper));
-    --sel: color-mix(in oklab, var(--cobalt) 20%, var(--paper));
-    --tint: color-mix(in oklab, var(--cream) 30%, var(--paper));
-    --statute-wash: color-mix(in oklab, var(--statute) 16%, var(--paper));
+    --oxblood-hover: color-mix(in oklab, var(--oxblood) 85%, var(--ink));
+    --accent-wash: color-mix(in oklab, var(--oxblood) 14%, var(--paper));
+    --sel: color-mix(in oklab, var(--oxblood) 20%, var(--paper));
+    --tint: color-mix(in oklab, var(--canvas) 30%, var(--paper));
+    --statute-wash: color-mix(in oklab, var(--status-statute) 16%, var(--paper));
+    --error-wash: color-mix(in oklab, var(--status-error) 16%, var(--paper));
+    --persuasive-wash: color-mix(in oklab, var(--gray) 18%, var(--paper));
     --scrim-bg: color-mix(in oklab, var(--shade) 62%, transparent);
-    --focus-ring: 0 0 0 3px color-mix(in oklab, var(--cobalt) 30%, transparent);
+    --focus-ring: 0 0 0 3px color-mix(in oklab, var(--oxblood) 30%, transparent);
     --focus-ring-strong:
-      0 0 0 3px color-mix(in oklab, var(--cobalt) 46%, transparent);
-    --flash-ring: 0 0 0 3px color-mix(in oklab, var(--cobalt) 40%, transparent);
-    --amber-line: color-mix(in oklab, var(--amber) 55%, var(--paper));
-    --tok-empty-bg: color-mix(in oklab, var(--amber) 14%, transparent);
-    --tok-empty-bg-hover: color-mix(in oklab, var(--amber) 24%, transparent);
-    --srchit: color-mix(in oklab, var(--amber) 18%, var(--paper));
+      0 0 0 3px color-mix(in oklab, var(--oxblood) 46%, transparent);
+    --flash-ring: 0 0 0 3px color-mix(in oklab, var(--oxblood) 40%, transparent);
+    --blank-line: color-mix(in oklab, var(--status-blank) 55%, var(--paper));
+    --tok-empty-bg: color-mix(in oklab, var(--status-blank) 14%, transparent);
+    --tok-empty-bg-hover: color-mix(in oklab, var(--status-blank) 24%, transparent);
+    --srchit: color-mix(in oklab, var(--status-blank) 18%, var(--paper));
     --cite-ink: color-mix(in oklab, var(--ink) 80%, var(--paper));
     --cite-line: color-mix(in oklab, var(--ink) 30%, var(--paper));
-    --filled-underline: color-mix(in oklab, var(--cobalt) 50%, var(--paper));
-    --computed-underline: color-mix(in oklab, var(--cobalt) 42%, transparent);
-    --elev-1: 0 1px 2px color-mix(in oklab, var(--shade) 50%, transparent),
-      0 2px 8px color-mix(in oklab, var(--shade) 40%, transparent);
-    --elev-2: 0 1px 1px color-mix(in oklab, var(--shade) 40%, transparent),
-      0 4px 10px color-mix(in oklab, var(--shade) 34%, transparent),
-      0 16px 40px color-mix(in oklab, var(--shade) 40%, transparent);
+    --filled-underline: color-mix(in oklab, var(--oxblood) 50%, var(--paper));
+    --computed-underline: color-mix(in oklab, var(--oxblood) 42%, transparent);
+    --elev-2: 0 1px 2px color-mix(in oklab, var(--shade) 40%, transparent),
+      0 8px 24px color-mix(in oklab, var(--shade) 40%, transparent),
+      0 28px 64px color-mix(in oklab, var(--shade) 50%, transparent);
     --elev-3: 0 12px 40px color-mix(in oklab, var(--shade) 62%, transparent);
   }
 }
@@ -1339,6 +1341,7 @@ button {
   :root {
     --dur-1: 0.01ms;
     --dur-2: 0.01ms;
+    --dur-3: 0.01ms;
   }
 }
 

@@ -109,7 +109,7 @@ test("a dark-scheme token block repaints the surface without touching print", as
     });
     await page.close();
   }
-  expect(backgrounds["light"]!["body"]).toBe("rgb(251, 246, 235)");
+  expect(backgrounds["light"]!["body"]).toBe("rgb(238, 240, 242)");
   expect(backgrounds["dark"]!["body"]).not.toBe(backgrounds["light"]!["body"]);
   expect(backgrounds["dark"]!["ink"]).not.toBe(backgrounds["light"]!["ink"]);
   // Paper is paper: the print tokens are not part of the scheme override.

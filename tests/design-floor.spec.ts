@@ -32,14 +32,14 @@ test("no uppercase text transform in styles.css", async ({ request }) => {
   expect(await cssText(request)).not.toMatch(/text-transform:\s*uppercase/);
 });
 
-test("type scale: at most five --fs-* screen tokens and three weights", async ({ request }) => {
+test("type scale: at most four --fs-* screen tokens and three weights", async ({ request }) => {
   const css = await cssText(request);
   const sizes = new Set(
     [...css.matchAll(/--fs-([a-z0-9]+):/g)]
       .map((m) => m[1])
       .filter((n) => n !== "print"),
   );
-  expect([...sizes].length).toBeLessThanOrEqual(5);
+  expect([...sizes].length).toBeLessThanOrEqual(4);
   const weights = new Set(
     [...css.matchAll(/font-weight:\s*(\d+|normal|bold)/g)].map((m) => m[1]),
   );
@@ -129,7 +129,7 @@ test("every button, input, select and tab is at least 44px square at 1440", asyn
 test("page identity: theme-color and a resolvable og:image", async ({ page, request }) => {
   await page.goto("/index.html", { waitUntil: "load" });
   const theme = await page.locator('meta[name="theme-color"]').getAttribute("content");
-  expect(theme).toBe("#fbf6eb");
+  expect(theme).toBe("#eef0f2");
   const og = await page.locator('meta[property="og:image"]').getAttribute("content");
   expect(og).toBeTruthy();
   const res = await request.get(new URL(og!, page.url()).toString());
@@ -150,4 +150,35 @@ test("the authority card responds to its container, not the viewport", async ({ 
   });
   const wide = await pad();
   expect(parseFloat(wide)).toBeGreaterThan(parseFloat(narrow));
+});
+
+test("Inter Tight is gone and both Classical families are requested", async ({ request }) => {
+  const html = await (await request.get("/index.html")).text();
+  const css = await (await request.get("/styles.css")).text();
+  expect(html).not.toMatch(/Inter(\+| )Tight/);
+  expect(css).not.toMatch(/Inter(\+| )Tight/);
+  expect(html).toContain("family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400");
+  expect(html).toContain("family=Public+Sans:wght@400;600");
+  expect(css).toMatch(/--sans:\s*"Public Sans"/);
+  expect(css).toMatch(/--serif:\s*"Libre Caslon Text"/);
+});
+
+test("the light :root holds exactly eight colour literals besides the print pair", async ({ request }) => {
+  const css = await cssText(request);
+  const root = css.match(/:root\s*\{[\s\S]*?\n\}/)![0];
+  const lits = [...root.matchAll(/--([a-z-]+):\s*#[0-9a-fA-F]{3,8}\b/g)].map((m) => m[1]);
+  expect(lits.filter((n) => !n!.startsWith("print-")).sort()).toEqual(
+    ["canvas", "gray", "ink", "oxblood", "paper", "status-blank", "status-error", "status-statute"],
+  );
+});
+
+test("every inline svg uses a 1.5 stroke (Tabler outline) and the brand mark is oxblood", async ({ request, page }) => {
+  const html = await (await request.get("/index.html")).text();
+  const svgs = html.match(/<svg[\s\S]*?>/g) || [];
+  expect(svgs.length).toBeGreaterThan(0);
+  for (const s of svgs) expect(s).toMatch(/stroke-width="1\.5"/);
+  expect(html).toContain("Tabler Icons 3.49.0");
+  await page.goto("/index.html", { waitUntil: "load" });
+  const mark = await page.locator(".brand__mark").getAttribute("stroke");
+  expect(mark).toBe("var(--oxblood)");
 });
