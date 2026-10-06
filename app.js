@@ -793,7 +793,10 @@
       row.addEventListener("focusout", off);
     });
     $$("#ctxBody .toa__main").forEach((b) =>
-      b.addEventListener("click", () => locateCitation(b.dataset.toa, true)),
+      b.addEventListener("click", () => {
+        locateCitation(b.dataset.toa, true);
+        closeRailDrawer(true); // narrow screens: reveal the cited paragraph
+      }),
     );
     if (flashId) {
       const row = $(`#ctxBody .toa__row[data-auth="${flashId}"]`);
@@ -968,6 +971,81 @@
     $("#drawer").classList.remove("open");
     $("#scrim").classList.remove("open");
   }
+  function refIsOpen() {
+    return $("#drawer").classList.contains("open");
+  }
+
+  /* ------------------------------------------- form and context drawers */
+  /** Below 1080px the form rail and context rail are drawers. */
+  const narrow = window.matchMedia("(max-width: 1080px)");
+  /** @type {"rail" | "ctx" | null} */
+  let openRail = null;
+  /** @type {HTMLElement | null} */
+  let railOpener = null;
+  const RAILS = /** @type {const} */ ([
+    ["rail", "#rail", "#btnFields", "show-rail-mobile"],
+    ["ctx", "#ctx", "#btnAuthorities", "show-ctx-mobile"],
+  ]);
+  /** Reflect openRail in classes, aria and inert; the one place that decides. */
+  function syncRails() {
+    RAILS.forEach(([name, sel, btn, cls]) => {
+      const el = $(sel);
+      const open = narrow.matches && openRail === name;
+      const hidden = narrow.matches && !open;
+      document.body.classList.toggle(cls, open);
+      $(btn).setAttribute("aria-expanded", String(open));
+      el.toggleAttribute("inert", hidden);
+      if (hidden) el.setAttribute("aria-hidden", "true");
+      else el.removeAttribute("aria-hidden");
+      if (open) {
+        el.setAttribute("role", "dialog");
+        el.setAttribute("aria-modal", "true");
+      } else {
+        el.removeAttribute("role");
+        el.removeAttribute("aria-modal");
+      }
+    });
+    $("#railScrim").classList.toggle("open", narrow.matches && !!openRail);
+  }
+  /** @param {"rail" | "ctx"} name @param {HTMLElement} opener */
+  function openRailDrawer(name, opener) {
+    if (!narrow.matches) return;
+    openRail = name;
+    railOpener = opener;
+    syncRails();
+    const el = $(name === "rail" ? "#rail" : "#ctx");
+    const first = $("[data-close-drawer]", el);
+    if (first) first.focus();
+  }
+  /** @param {boolean} [restoreFocus] */
+  function closeRailDrawer(restoreFocus) {
+    if (!openRail) return;
+    const opener = railOpener;
+    openRail = null;
+    railOpener = null;
+    syncRails();
+    if (restoreFocus && opener) opener.focus();
+  }
+  /** Keep Tab inside the open drawer. @param {KeyboardEvent} e */
+  function trapRailFocus(e) {
+    if (e.key !== "Tab" || !openRail || !narrow.matches) return;
+    const el = $(openRail === "rail" ? "#rail" : "#ctx");
+    const items = /** @type {HTMLElement[]} */ ([
+      ...el.querySelectorAll(
+        'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])',
+      ),
+    ]).filter((n) => n.offsetParent !== null);
+    if (!items.length) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
 
   /* --------------------------------------------------- markdown (compact) */
   /** @param {string} s */
@@ -1140,6 +1218,23 @@
     });
     $("#drawerClose").addEventListener("click", closeRef);
     $("#scrim").addEventListener("click", closeRef);
+    $("#btnFields").addEventListener("click", (/** @type {Event} */ e) =>
+      openRailDrawer("rail", /** @type {HTMLElement} */ (e.currentTarget)),
+    );
+    $("#btnAuthorities").addEventListener("click", (/** @type {Event} */ e) => {
+      setTab("authorities");
+      openRailDrawer("ctx", /** @type {HTMLElement} */ (e.currentTarget));
+    });
+    $$("[data-close-drawer]").forEach((b) =>
+      b.addEventListener("click", () => closeRailDrawer(true)),
+    );
+    $("#railScrim").addEventListener("click", () => closeRailDrawer(true));
+    narrow.addEventListener("change", () => {
+      openRail = null;
+      railOpener = null;
+      syncRails();
+    });
+    syncRails();
     $("#stage").addEventListener("click", (/** @type {Event} */ e) => {
       const t = /** @type {Element} */ (e.target);
       if (t.id === "stage" || t.id === "paper") {
@@ -1149,7 +1244,11 @@
       }
     });
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") closeRef();
+      if (e.key === "Escape") {
+        if (refIsOpen()) closeRef();
+        else closeRailDrawer(true);
+      }
+      trapRailFocus(e);
     });
 
     window.__recital = {

@@ -51,6 +51,7 @@
   --focus-ring: 0 0 0 3px color-mix(in oklab, var(--oxblood) 16%, transparent);
   --focus-ring-strong:
     0 0 0 3px color-mix(in oklab, var(--oxblood) 28%, transparent);
+  --flash-wash: color-mix(in oklab, var(--oxblood) 30%, transparent);
   --flash-ring: 0 0 0 3px color-mix(in oklab, var(--oxblood) 22%, transparent);
   --hover-ring: 0 0 0 1px var(--oxblood);
 
@@ -75,6 +76,7 @@
   --sp-7: 48px;
   --sp-8: 64px;
   --sp-paper-x: clamp(var(--sp-4), 6vw, var(--sp-8));
+  --sp-paper-r: clamp(var(--sp-4), 4vw, var(--sp-6)); /* sheet right margin */
   --sp-stage-x: clamp(var(--sp-3), 3vw, var(--sp-5));
   --sp-page: 1in; /* printed page margin */
 
@@ -82,7 +84,6 @@
   --h-topbar: 72px;
   --w-rail: 320px;
   --w-ctx: 360px;
-  --w-paper: 752px;
   --hit: 44px; /* minimum touch target */
 
   /* Shape: sheet and cards square, controls 3px, pill for the meter only */
@@ -195,21 +196,17 @@ button {
   font-weight: 700;
   font-size: var(--fs-md);
 }
-.brand__doc {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.15;
-  padding-left: var(--sp-3);
-  border-left: 1px solid var(--surface-border);
-  min-width: 0;
+/* topbar buttons that open the form and context drawers (below 1080px only) */
+.topbar__drawers {
+  display: none;
+  gap: var(--sp-2);
 }
-.brand__doc b {
-  font-weight: 600;
-  font-size: var(--fs-md);
+.drawer-toggle svg {
+  width: 16px;
+  height: 16px;
 }
-.brand__doc span {
-  font-size: var(--fs-sm);
-  color: var(--gray);
+.iconbtn.drawer-close {
+  display: none;
 }
 
 .topbar__spacer {
@@ -507,24 +504,60 @@ button {
 }
 
 /* --------------------------------------------------------------- document */
+/* The stage is a size container: the sheet's margins answer to the stage's
+   own width (see the @container rule below), not to the viewport. */
 .stage {
+  container-type: inline-size;
+  container-name: stage;
   overflow-y: auto;
   min-height: 0;
   padding: var(--sp-6) var(--sp-stage-x) var(--sp-8);
   background: var(--surface-page);
 }
+/* display title row: above the sheet, aligned with its left edge */
+.doc-title {
+  --sp-gutter: var(--sp-7);
+  max-width: calc(65ch + var(--sp-gutter) + var(--sp-paper-r));
+  margin: 0 auto var(--sp-5);
+}
+.doc-title__h {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: var(--fs-display);
+  line-height: 1.15;
+  color: var(--ink);
+  text-wrap: balance;
+}
+.doc-title__sub {
+  margin: var(--sp-1) 0 0;
+  font-size: var(--fs-sm);
+  color: var(--gray);
+}
+/* The sheet: a 65ch text column with a left gutter where paragraph numbers hang. */
 .paper {
-  max-width: var(--w-paper);
+  --sp-gutter: var(--sp-7);
+  max-width: calc(65ch + var(--sp-gutter) + var(--sp-paper-r));
   margin: 0 auto;
   background: var(--paper);
   border-radius: var(--r-none);
   box-shadow: var(--elev-2);
-  padding: var(--sp-8) var(--sp-paper-x);
+  padding: var(--sp-8) var(--sp-paper-r) var(--sp-8) var(--sp-gutter);
   font-family: var(--serif);
   color: var(--ink);
   font-size: var(--fs-md);
   line-height: 1.45;
   overflow-wrap: anywhere;
+}
+@container stage (max-width: 640px) {
+  .paper {
+    --sp-gutter: var(--sp-6);
+    padding-top: var(--sp-6);
+    padding-bottom: var(--sp-6);
+  }
+  .doc-title {
+    --sp-gutter: var(--sp-6);
+  }
 }
 .doc-part {
   margin: 0;
@@ -611,9 +644,26 @@ button {
   user-select: none;
   transition: var(--tr-ui);
 }
+/* Cited paragraph mark. Communicates sequence: where the citation lands.
+   An oxblood bar beside the margin number fades in (opacity only). */
+.pnum::before {
+  content: "";
+  position: absolute;
+  left: calc(100% + var(--sp-2));
+  top: var(--sp-1);
+  bottom: var(--sp-1);
+  width: 3px;
+  background: var(--oxblood);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-2) var(--ease-out);
+}
 .pnum.is-tracing {
   color: var(--oxblood);
   font-weight: 600;
+}
+.pnum.is-tracing::before {
+  opacity: 1;
 }
 
 /* selectable sections (body/headings carry mappings) */
@@ -734,7 +784,19 @@ button {
   text-decoration-style: solid;
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
+  position: relative;
   transition: var(--tr-ui);
+}
+/* Field token fill flash. Communicates feedback: the value you typed
+   propagated to every place it appears. A wash layer fades out (opacity only). */
+.tok::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--flash-wash);
+  opacity: 0;
+  pointer-events: none;
 }
 /* blank: amber wash and a dotted underline */
 .tok--empty {
@@ -770,16 +832,15 @@ button {
   text-decoration-color: var(--oxblood);
   text-decoration-thickness: 2px;
 }
-.tok.is-flash {
+\.tok\.is-flash::after {
   animation: tokflash var(--dur-2) var(--ease-out);
 }
 @keyframes tokflash {
-  0% {
-    background: var(--oxblood);
-    color: var(--on-accent);
-    box-shadow: var(--flash-ring);
+  from {
+    opacity: 1;
   }
-  100% {
+  to {
+    opacity: 0;
   }
 }
 
@@ -851,11 +912,17 @@ button {
   min-height: 0;
   z-index: var(--z-rail);
 }
+.ctx__top {
+  display: flex;
+  align-items: flex-start;
+  border-bottom: 1px solid var(--surface-border);
+}
 .ctx__tabs {
   display: flex;
+  flex: 1;
+  min-width: 0;
   padding: var(--sp-2) var(--sp-3) 0;
   gap: var(--sp-2);
-  border-bottom: 1px solid var(--surface-border);
 }
 .ctx__tab {
   border: 0;
@@ -1183,7 +1250,8 @@ button {
   height: 0;
   border-bottom: 2px dotted var(--rule-2);
   transform-origin: left center;
-  transition: var(--tr-ui);
+  opacity: 0.35;
+  transition: none;
 }
 .toa__pages {
   flex: 0 1 auto;
@@ -1193,8 +1261,22 @@ button {
   color: var(--ink);
   transition: var(--tr-ui);
 }
+/* Authority leader draw. Communicates relationship: this authority leads to
+   the paragraphs that cite it. The dots draw left to right (transform and opacity). */
 .toa__row.is-tracing .toa__leader {
   border-bottom-color: var(--oxblood);
+  opacity: 1;
+  animation: leader-draw var(--dur-3) var(--ease-out) both;
+}
+@keyframes leader-draw {
+  from {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+  to {
+    transform: scaleX(1);
+    opacity: 1;
+  }
 }
 .toa__row.is-tracing .toa__pages {
   color: var(--oxblood);
@@ -1351,13 +1433,15 @@ button {
 }
 
 /* -------------------------------------------------------------- ref drawer */
+/* Drawer in and out (reference, form, context). Communicates state change:
+   a layer opened over the document. translateX plus scrim opacity only. */
 .scrim {
   position: fixed;
   inset: 0;
   background: var(--scrim-bg);
   opacity: 0;
   pointer-events: none;
-  transition: opacity var(--dur-1) var(--ease-out);
+  transition: opacity var(--dur-2) var(--ease-out);
   z-index: var(--z-drawer);
 }
 .scrim.open {
@@ -1371,7 +1455,6 @@ button {
   height: 100dvh;
   width: min(720px, 94vw);
   background: var(--paper);
-  box-shadow: var(--elev-3);
   transform: translateX(100%);
   transition: transform var(--dur-2) var(--ease-out);
   z-index: var(--z-modal);
@@ -1380,6 +1463,7 @@ button {
 }
 .drawer.open {
   transform: translateX(0);
+  box-shadow: var(--elev-3); /* only open: a closed drawer must not bleed a shadow onto the screen edge */
 }
 .drawer__head {
   display: flex;
@@ -1509,40 +1593,87 @@ button {
   transform: translateX(-50%) translateY(0);
 }
 
-/* mobile note (tool is desktop-first; small screens get a stacked read view) */
-.mobilenote {
-  display: none;
-}
-
+/* ---------------------------------------------------- narrow screens (<1080) */
+/* One column. The form rail and the context rail become drawers opened from the
+   topbar ("Fields", "Authorities"); nothing is hidden, so no control is lost. */
 @media (max-width: 1080px) {
   .workbench {
     grid-template-columns: minmax(0, 1fr);
   }
+  .topbar__drawers {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .iconbtn.drawer-close {
+    display: inline-grid;
+  }
   .rail,
   .ctx {
-    display: none;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    width: var(--w-rail);
+    max-width: 100%;
+    border: 0;
+    z-index: var(--z-modal);
+    transition: transform var(--dur-2) var(--ease-out);
+  }
+  .rail {
+    left: 0;
+    transform: translateX(-100%);
+  }
+  .ctx {
+    right: 0;
+    width: var(--w-ctx);
+    transform: translateX(100%);
+  }
+  body.show-rail-mobile .rail,
+  body.show-ctx-mobile .ctx {
+    transform: translateX(0);
+    box-shadow: var(--elev-3);
+  }
+  .rail__head {
+    position: relative;
+    padding-right: var(--sp-8);
+  }
+  .rail__head .drawer-close {
+    position: absolute;
+    top: var(--sp-2);
+    right: var(--sp-2);
+  }
+  .ctx__top .drawer-close {
+    margin: var(--sp-2) var(--sp-2) var(--sp-1) 0;
   }
   .stage {
-    padding: var(--sp-4) var(--sp-stage-x) var(--sp-8);
+    padding: var(--sp-5) var(--sp-stage-x) var(--sp-8);
+  }
+}
+@media (min-width: 1081px) {
+  .scrim--rails {
+    display: none;
+  }
+}
+@media (max-width: 600px) {
+  .rail,
+  .ctx {
+    width: 100%;
   }
   .paper {
-    padding: var(--sp-6) var(--sp-paper-x);
+    --sp-gutter: var(--sp-4);
+    --sp-paper-r: var(--sp-4);
   }
-  .mobilenote {
+  .doc-title {
+    --sp-gutter: var(--sp-4);
+  }
+  /* the margin number moves inside the text column, above its paragraph */
+  .pnum {
+    position: static;
     display: block;
-    max-width: var(--w-paper);
-    margin: 0 auto var(--sp-3);
-    padding: var(--sp-3);
-    background: var(--accent-wash);
-    border-radius: var(--r-sm);
-    font-size: var(--fs-md);
-    color: var(--oxblood);
+    margin: 0 0 var(--sp-1);
+    line-height: 1.2;
   }
-  body.show-rail-mobile .rail {
-    display: flex;
-    position: fixed;
-    inset: var(--h-topbar) 0 0 0;
-    z-index: var(--z-drawer);
+  .pnum::before {
+    left: calc(-1 * var(--sp-3));
   }
 }
 
@@ -1645,7 +1776,8 @@ button {
   .drawer,
   .toast,
   .pnum,
-  .mobilenote,
+  .doc-title,
+  .topbar__drawers,
   .part-rule,
   body.show-rail-mobile .rail {
     display: none;
